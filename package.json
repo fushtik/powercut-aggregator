@@ -1,0 +1,13 @@
+{
+  "name": "powercut-aggregator",
+  "version": "1.0.0",
+  "description": "UK Power Cut Aggregator - aggregates power outages from all 14 DNOs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["power", "outages", "uk", "dno"],
+  "author": "Mark Haworth",
+  "license": "MIT"
+}
