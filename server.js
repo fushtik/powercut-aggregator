@@ -202,9 +202,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
 }).addTo(map);
 
+const markersLayer = L.layerGroup().addTo(map);
+
+function loadOutages() {
 fetch('/api/outages')
   .then(r => r.json())
   .then(outages => {
+    markersLayer.clearLayers();
     const dnoCounts = {};
     let totalCustomers = 0;
     let plotted = 0;
@@ -224,7 +228,7 @@ fetch('/api/outages')
         weight: 1.5,
         opacity: 0.9,
         fillOpacity: coords.approximate ? 0.55 : 0.80,
-      }).addTo(map);
+      }).addTo(markersLayer);
 
       const etr = outage.estimated_restoration_time ? formatTime(outage.estimated_restoration_time) : 'Unknown';
       const customers = outage.customers_affected > 0 ? outage.customers_affected.toLocaleString() : '<10';
@@ -269,6 +273,10 @@ fetch('/api/outages')
     document.querySelector('.loading') && (document.querySelector('.loading').textContent = 'Failed to load outages');
     console.error(err);
   });
+}
+
+loadOutages();
+setInterval(loadOutages, 5 * 60 * 1000);
 </script>
 </body>
 </html>`;
