@@ -17,8 +17,11 @@
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
-    "dotenv": "^17.4.2",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
     "jsdom": "^29.1.1",
-    "puppeteer": "^24.43.0"
+    "puppeteer": "^24.43.0",
+    "ws": "^8.18.0"
   }
 }
