@@ -281,6 +281,7 @@ const server = http.createServer(async (req, res) => {
       const data = await getOutages();
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'no-store');
       res.end(JSON.stringify(data));
     } catch (err) {
       res.statusCode = 500;
