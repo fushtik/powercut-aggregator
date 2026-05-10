@@ -18,7 +18,7 @@ const server = http.createServer((req, res) => {
         </style>
       </head>
       <body>
-        <h1>Power Cut Aggregator</h1>
+        <h1>UK Power Cut Aggregator</h1>
         <p class="status">✓ Hello World - Server is running!</p>
         <p>UK Power Outage Monitoring System</p>
         <p><small>Created: ${new Date().toISOString()}</small></p>
