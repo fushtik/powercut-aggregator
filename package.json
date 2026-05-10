@@ -7,7 +7,18 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["power", "outages", "uk", "dno"],
+  "keywords": [
+    "power",
+    "outages",
+    "uk",
+    "dno"
+  ],
   "author": "Mark Haworth",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
+    "dotenv": "^17.4.2",
+    "jsdom": "^29.1.1",
+    "puppeteer": "^24.43.0"
+  }
 }
