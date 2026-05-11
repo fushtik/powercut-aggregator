@@ -54,21 +54,24 @@ async function fetchSSENData() {
  * Normalize SSEN data to our schema
  */
 function normalizeSSENRecord(fault) {
-  // Map SSEN fault types to our outage_type
   const typeMap = {
     'LV': 'unplanned',
     'HV': 'unplanned',
     'PSI': 'planned',
   };
 
+  const isRestored = fault.jobStatus === 'R';
+
+  const postcodeArea = fault.affectedAreas && fault.affectedAreas.length > 0
+    ? fault.affectedAreas[0].trim().split(' ')[0].substring(0, 4)
+    : null;
+
   return {
     dno: 'SSEN',
     dno_fault_id: (fault.reference || `ssen_${Date.now()}`).substring(0, 100),
     outage_type: typeMap[fault.type] || 'unplanned',
-    severity: null, // SSEN doesn't provide severity
-    affected_postcode_area: fault.affectedAreas && fault.affectedAreas.length > 0
-      ? fault.affectedAreas[0].substring(0, 4)
-      : null,
+    severity: null,
+    affected_postcode_area: postcodeArea,
     affected_postcodes: fault.affectedAreas || [],
     customers_affected: fault.customerCount || 0,
     location_description: (fault.title || 'Unknown location').substring(0, 500),
@@ -84,9 +87,35 @@ function normalizeSSENRecord(fault) {
     fault_description: (fault.message || ''),
     reference_number: (fault.reference || null)?.substring(0, 100),
     source_url: 'https://external.distribution.prd.ssen.co.uk/opendataportal-prd/v4/api/getallfaults',
-    status: 'active',
+    status: isRestored ? 'resolved' : 'active',
     raw_data: fault,
   };
+}
+
+async function resolveStaleOutages(activeFaultIds) {
+  // Mark any SSEN records in the DB that are no longer in the live API as resolved
+  const { data: dbActive, error } = await supabase
+    .from('outages')
+    .select('dno_fault_id')
+    .eq('dno', 'SSEN')
+    .eq('status', 'active');
+
+  if (error) throw new Error(`DB query error: ${error.message}`);
+
+  const staleIds = (dbActive || [])
+    .map(r => r.dno_fault_id)
+    .filter(id => !activeFaultIds.has(id));
+
+  if (staleIds.length === 0) return 0;
+
+  const { error: updateError } = await supabase
+    .from('outages')
+    .update({ status: 'resolved', updated_at: new Date().toISOString() })
+    .eq('dno', 'SSEN')
+    .in('dno_fault_id', staleIds);
+
+  if (updateError) throw new Error(`Resolve update error: ${updateError.message}`);
+  return staleIds.length;
 }
 
 /**
@@ -174,20 +203,27 @@ async function main() {
 
     let successCount = 0;
     let errorCount = 0;
+    let skippedCount = 0;
     const sampleOutages = [];
+    const activeFaultIds = new Set();
 
     for (const fault of faults) {
       try {
-        // Normalize the record
+        // Skip faults merged into another — they'd double-count customers
+        if (fault.mergedTo) {
+          skippedCount++;
+          continue;
+        }
+
         const normalized = normalizeSSENRecord(fault);
 
-        // Insert into database
-        const result = await insertOutage(normalized);
+        // Track all IDs seen regardless of resolved status (so we don't un-resolve them)
+        activeFaultIds.add(normalized.dno_fault_id);
 
+        await insertOutage(normalized);
         successCount++;
 
-        // Keep first 3 for display
-        if (sampleOutages.length < 3) {
+        if (sampleOutages.length < 3 && normalized.status === 'active') {
           sampleOutages.push({
             dno_fault_id: normalized.dno_fault_id,
             location: normalized.location_description,
@@ -202,11 +238,17 @@ async function main() {
       }
     }
 
+    // Mark any previously-active SSEN faults that are no longer in the API as resolved
+    const resolvedCount = await resolveStaleOutages(activeFaultIds);
+    console.log(`🔄 Marked ${resolvedCount} stale outages as resolved\n`);
+
     // Summary
     console.log('='.repeat(60));
     console.log('\n📊 INGESTION SUMMARY\n');
-    console.log(`✅ Successfully inserted: ${successCount} faults`);
-    console.log(`❌ Failed: ${errorCount} faults`);
+    console.log(`✅ Successfully upserted: ${successCount} faults`);
+    console.log(`🔄 Resolved (stale):     ${resolvedCount}`);
+    console.log(`⏭️  Skipped (merged):     ${skippedCount}`);
+    console.log(`❌ Failed:               ${errorCount}`);
     console.log(`⏱️  Duration: ${Date.now() - startTime}ms\n`);
 
     if (sampleOutages.length > 0) {
@@ -244,4 +286,5 @@ module.exports = {
   fetchSSENData,
   normalizeSSENRecord,
   insertOutage,
+  resolveStaleOutages,
 };
