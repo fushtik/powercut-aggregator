@@ -121,6 +121,19 @@ const PAGE_HTML = `<!DOCTYPE html>
 
     .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #aaa; font-size: 1rem; z-index: 999; }
 
+    #footer {
+      background: #16213e;
+      border-top: 1px solid #0f3460;
+      padding: 6px 16px;
+      font-size: 0.68rem;
+      color: #666;
+      text-align: center;
+      flex-shrink: 0;
+      line-height: 1.5;
+    }
+    #footer a { color: #555; text-decoration: none; }
+    #footer a:hover { color: #888; }
+
     .leaflet-popup-content-wrapper { background: #16213e; color: #eee; border: 1px solid #0f3460; border-radius: 8px; }
     .leaflet-popup-tip { background: #16213e; }
     .leaflet-popup-content { margin: 12px 16px; font-size: 0.82rem; line-height: 1.6; min-width: 220px; }
@@ -155,6 +168,14 @@ const PAGE_HTML = `<!DOCTYPE html>
 </div>
 
 <div id="map"><div class="loading">Loading outages...</div></div>
+
+<div id="footer">
+  Outage data sourced from UK Distribution Network Operators and remains the property of the respective DNO.
+  &nbsp;&middot;&nbsp;
+  This is an unofficial personal project, not affiliated with or endorsed by any DNO or industry body.
+  &nbsp;&middot;&nbsp;
+  Data is aggregated from public sources for convenience only &mdash; always check your DNO&rsquo;s website for the latest information.
+</div>
 
 <div id="legend">
   <h4>DNO</h4>
