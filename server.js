@@ -400,12 +400,59 @@ setInterval(refreshOutages, 5 * 60 * 1000);
 </body>
 </html>`;
 
+function setSecurityHeaders(res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://unpkg.com; " +
+    "style-src 'self' 'unsafe-inline' https://unpkg.com; " +
+    "img-src 'self' data: https://*.tile.openstreetmap.org; " +
+    "connect-src 'self'; " +
+    "frame-ancestors 'none';"
+  );
+}
+
+// Simple in-memory rate limiter for /api/outages
+const rateLimitMap = new Map();
+function isRateLimited(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxRequests = 30;
+  const entry = rateLimitMap.get(ip) || { count: 0, start: now };
+  if (now - entry.start > windowMs) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
+  }
+  entry.count++;
+  rateLimitMap.set(ip, entry);
+  return entry.count > maxRequests;
+}
+// Prune stale entries every 5 minutes
+setInterval(() => {
+  const cutoff = Date.now() - 60 * 1000;
+  for (const [ip, entry] of rateLimitMap) {
+    if (entry.start < cutoff) rateLimitMap.delete(ip);
+  }
+}, 5 * 60 * 1000);
+
 const server = http.createServer(async (req, res) => {
   const path = req.url.split('?')[0];
 
   if (path === '/api/outages') {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
+    if (isRateLimited(ip)) {
+      res.statusCode = 429;
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Retry-After', '60');
+      res.end(JSON.stringify({ error: 'Too many requests' }));
+      return;
+    }
     try {
       const data = await getOutages();
+      setSecurityHeaders(res);
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Cache-Control', 'no-store');
@@ -413,11 +460,12 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: err.message }));
+      res.end(JSON.stringify({ error: 'Internal server error' }));
     }
     return;
   }
 
+  setSecurityHeaders(res);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(PAGE_HTML);
 });
