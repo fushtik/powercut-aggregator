@@ -28,6 +28,7 @@ const DNO_COLORS = {
   'SPE':                '#C62828',
   'NGED':               '#6A1B9A',
   'NIE':                '#00838F',
+  'ENWL':               '#F57F17',
 };
 
 const PAGE_HTML = `<!DOCTYPE html>
@@ -113,7 +114,7 @@ const PAGE_HTML = `<!DOCTYPE html>
 <div id="header">
   <div>
     <h1>UK Power Cut Aggregator</h1>
-    <div class="subtitle">Live active outages from 6 DNOs</div>
+    <div class="subtitle">Live active outages from 7 DNOs</div>
   </div>
   <div id="stats">
     <span id="total-chip" class="stat-chip">Loading...</span>
@@ -130,6 +131,7 @@ const PAGE_HTML = `<!DOCTYPE html>
   <div class="legend-row"><span class="legend-dot" style="background:#C62828"></span><span class="legend-label">SP Energy</span></div>
   <div class="legend-row"><span class="legend-dot" style="background:#6A1B9A"></span><span class="legend-label">NGED</span></div>
   <div class="legend-row"><span class="legend-dot" style="background:#00838F"></span><span class="legend-label">NIE</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#F57F17"></span><span class="legend-label">ENWL</span></div>
   <hr class="legend-divider">
   <h4>Customers affected</h4>
   <div class="legend-size-row">
