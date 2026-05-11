@@ -531,9 +531,11 @@ const PANEL_CONTENT = {
   },
   about: {
     title: 'About',
-    html: '<p>Built by <strong>Mark Haworth</strong>.</p>' +
+    html: '<p>Built by <strong>Mark Haworth G4EID/KM8H</strong>.</p>' +
+      '<p><a href="https://g4eid-km8h.net" target="_blank" rel="noopener">g4eid-km8h.net &#x2197;</a></p>' +
       '<p>An unofficial personal project aggregating publicly available outage data from all UK electricity Distribution Network Operators into a single map view.</p>' +
-      '<p>Not affiliated with or endorsed by any DNO or industry body.</p>'
+      '<p>Not affiliated with or endorsed by any DNO or industry body.</p>' +
+      '<p style="margin-top:16px;font-size:0.78rem;color:#777">This site was developed with the assistance of AI (Claude by Anthropic).</p>'
   }
 };
 
