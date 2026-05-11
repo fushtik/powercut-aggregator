@@ -68,6 +68,9 @@ function normalizeNIERecord(outage) {
 
   const isPlanned = (outage.outageType || '').toLowerCase() === 'planned';
 
+  const statusMsg = (outage.statusMessage || outage.status || '').toLowerCase();
+  const isResolved = statusMsg.includes('restor') || statusMsg.includes('resolved') || statusMsg.includes('complet');
+
   return {
     dno: 'NIE',
     dno_fault_id: (outage.outageId || '').substring(0, 100),
@@ -77,7 +80,7 @@ function normalizeNIERecord(outage) {
     affected_postcodes: postcodes,
     customers_affected: parseInt(outage.numCustAffected) || 0,
     location_description: (outage.postCode || 'Northern Ireland').substring(0, 255),
-    lat: null,  // Coordinates are Irish Grid (OSNI) — conversion requires proj4, deferred
+    lat: null,  // Irish Grid (OSNI) — conversion requires proj4, deferred
     lon: null,
     start_time: parseNIEDate(outage.startTime) || new Date().toISOString(),
     estimated_restoration_time: parseNIEDate(outage.estRestoreFullDateTime || outage.estRestoreTime),
@@ -87,9 +90,34 @@ function normalizeNIERecord(outage) {
     fault_description: (outage.statusMessage || '').substring(0, 500) || null,
     reference_number: (outage.outageId || '').substring(0, 100),
     source_url: 'https://powercheck.nienetworks.co.uk/',
-    status: 'active',
+    status: isResolved ? 'resolved' : 'active',
     raw_data: outage,
   };
+}
+
+async function resolveStaleOutages(activeFaultIds) {
+  const { data: dbActive, error } = await supabase
+    .from('outages')
+    .select('dno_fault_id')
+    .eq('dno', 'NIE')
+    .eq('status', 'active');
+
+  if (error) throw new Error(`DB query error: ${error.message}`);
+
+  const staleIds = (dbActive || [])
+    .map(r => r.dno_fault_id)
+    .filter(id => !activeFaultIds.has(id));
+
+  if (staleIds.length === 0) return 0;
+
+  const { error: updateError } = await supabase
+    .from('outages')
+    .update({ status: 'resolved', updated_at: new Date().toISOString() })
+    .eq('dno', 'NIE')
+    .in('dno_fault_id', staleIds);
+
+  if (updateError) throw new Error(`Resolve update error: ${updateError.message}`);
+  return staleIds.length;
 }
 
 async function insertOutage(outageData) {
@@ -128,11 +156,13 @@ async function main() {
     let successCount = 0;
     let errorCount = 0;
     const sampleOutages = [];
+    const activeFaultIds = new Set();
 
     for (const outage of outages) {
       try {
         if (!outage.outageId) continue;
         const normalized = normalizeNIERecord(outage);
+        activeFaultIds.add(normalized.dno_fault_id);
         await insertOutage(normalized);
         successCount++;
         if (sampleOutages.length < 3) sampleOutages.push(normalized);
@@ -142,10 +172,14 @@ async function main() {
       }
     }
 
+    const resolvedCount = await resolveStaleOutages(activeFaultIds);
+    console.log(`🔄 Marked ${resolvedCount} stale outages as resolved\n`);
+
     console.log('='.repeat(60));
     console.log('\n📊 INGESTION SUMMARY\n');
-    console.log(`✅ Successfully inserted: ${successCount} outages`);
-    console.log(`❌ Failed: ${errorCount} outages`);
+    console.log(`✅ Successfully upserted: ${successCount} outages`);
+    console.log(`🔄 Resolved (stale):     ${resolvedCount}`);
+    console.log(`❌ Failed:               ${errorCount}`);
     console.log(`⏱️  Duration: ${Date.now() - startTime}ms\n`);
 
     if (sampleOutages.length > 0) {
@@ -173,4 +207,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { fetchNIEData, normalizeNIERecord, insertOutage };
+module.exports = { fetchNIEData, normalizeNIERecord, insertOutage, resolveStaleOutages };

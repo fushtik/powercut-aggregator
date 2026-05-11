@@ -137,6 +137,31 @@ function normalizeUKPNRecord(record) {
   };
 }
 
+async function resolveStaleOutages(activeFaultIds) {
+  const { data: dbActive, error } = await supabase
+    .from('outages')
+    .select('dno_fault_id')
+    .eq('dno', 'UKPN')
+    .eq('status', 'active');
+
+  if (error) throw new Error(`DB query error: ${error.message}`);
+
+  const staleIds = (dbActive || [])
+    .map(r => r.dno_fault_id)
+    .filter(id => !activeFaultIds.has(id));
+
+  if (staleIds.length === 0) return 0;
+
+  const { error: updateError } = await supabase
+    .from('outages')
+    .update({ status: 'resolved', updated_at: new Date().toISOString() })
+    .eq('dno', 'UKPN')
+    .in('dno_fault_id', staleIds);
+
+  if (updateError) throw new Error(`Resolve update error: ${updateError.message}`);
+  return staleIds.length;
+}
+
 /**
  * Insert outage record into database
  * Uses ON CONFLICT to avoid duplicates
@@ -224,18 +249,15 @@ async function main() {
     let successCount = 0;
     let errorCount = 0;
     const sampleOutages = [];
+    const activeFaultIds = new Set();
 
     for (const record of records) {
       try {
-        // Normalize the record
         const normalized = normalizeUKPNRecord(record);
-
-        // Insert into database
-        const result = await insertOutage(normalized);
-
+        activeFaultIds.add(normalized.dno_fault_id);
+        await insertOutage(normalized);
         successCount++;
 
-        // Keep first 3 for display
         if (sampleOutages.length < 3) {
           sampleOutages.push({
             dno_fault_id: normalized.dno_fault_id,
@@ -247,18 +269,19 @@ async function main() {
         }
       } catch (err) {
         console.error(`❌ Error processing record: ${err.message}`);
-        // Uncomment to debug which field caused the error:
-        // console.log(`   Record ID: ${record.record?.id || record.id}`);
-        // console.log(`   Normalized data keys: ${Object.keys(normalized).join(', ')}`);
         errorCount++;
       }
     }
 
+    const resolvedCount = await resolveStaleOutages(activeFaultIds);
+    console.log(`🔄 Marked ${resolvedCount} stale outages as resolved\n`);
+
     // Summary
     console.log('=' .repeat(60));
     console.log('\n📊 INGESTION SUMMARY\n');
-    console.log(`✅ Successfully inserted: ${successCount} outages`);
-    console.log(`❌ Failed: ${errorCount} outages`);
+    console.log(`✅ Successfully upserted: ${successCount} outages`);
+    console.log(`🔄 Resolved (stale):     ${resolvedCount}`);
+    console.log(`❌ Failed:               ${errorCount}`);
     console.log(`⏱️  Duration: ${Date.now() - startTime}ms\n`);
 
     if (sampleOutages.length > 0) {
@@ -297,4 +320,5 @@ module.exports = {
   fetchUKPNData,
   normalizeUKPNRecord,
   insertOutage,
+  resolveStaleOutages,
 };

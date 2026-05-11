@@ -280,6 +280,31 @@ function normalizeSPEnergyRecord(record) {
   };
 }
 
+async function resolveStaleOutages(activeFaultIds) {
+  const { data: dbActive, error } = await supabase
+    .from('outages')
+    .select('dno_fault_id')
+    .eq('dno', 'SPE')
+    .eq('status', 'active');
+
+  if (error) throw new Error(`DB query error: ${error.message}`);
+
+  const staleIds = (dbActive || [])
+    .map(r => r.dno_fault_id)
+    .filter(id => !activeFaultIds.has(id));
+
+  if (staleIds.length === 0) return 0;
+
+  const { error: updateError } = await supabase
+    .from('outages')
+    .update({ status: 'resolved', updated_at: new Date().toISOString() })
+    .eq('dno', 'SPE')
+    .in('dno_fault_id', staleIds);
+
+  if (updateError) throw new Error(`Resolve update error: ${updateError.message}`);
+  return staleIds.length;
+}
+
 /**
  * Insert outage into database
  */
@@ -318,6 +343,7 @@ async function main() {
     let successCount = 0;
     let errorCount = 0;
     const sampleOutages = [];
+    const activeFaultIds = new Set();
 
     for (let idx = 0; idx < records.length; idx++) {
       const record = records[idx];
@@ -327,6 +353,7 @@ async function main() {
         const normalized = normalizeSPEnergyRecord(record);
         if (!normalized.dno_fault_id) continue;
 
+        activeFaultIds.add(normalized.dno_fault_id);
         await insertOutage(normalized);
         successCount++;
 
@@ -339,10 +366,14 @@ async function main() {
       }
     }
 
+    const resolvedCount = await resolveStaleOutages(activeFaultIds);
+    console.log(`🔄 Marked ${resolvedCount} stale outages as resolved\n`);
+
     console.log('='.repeat(60));
     console.log('\n📊 INGESTION SUMMARY\n');
-    console.log(`✅ Successfully inserted: ${successCount} outages`);
-    console.log(`❌ Failed: ${errorCount} outages`);
+    console.log(`✅ Successfully upserted: ${successCount} outages`);
+    console.log(`🔄 Resolved (stale):     ${resolvedCount}`);
+    console.log(`❌ Failed:               ${errorCount}`);
     console.log(`⏱️  Duration: ${Date.now() - startTime}ms\n`);
 
     if (sampleOutages.length > 0) {
@@ -373,4 +404,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { fetchSPEnergyData, normalizeSPEnergyRecord, insertOutage };
+module.exports = { fetchSPEnergyData, normalizeSPEnergyRecord, insertOutage, resolveStaleOutages };

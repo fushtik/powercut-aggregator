@@ -179,6 +179,31 @@ function normalizeNGEDRecord(record) {
   };
 }
 
+async function resolveStaleOutages(activeFaultIds) {
+  const { data: dbActive, error } = await supabase
+    .from('outages')
+    .select('dno_fault_id')
+    .eq('dno', 'NGED')
+    .eq('status', 'active');
+
+  if (error) throw new Error(`DB query error: ${error.message}`);
+
+  const staleIds = (dbActive || [])
+    .map(r => r.dno_fault_id)
+    .filter(id => !activeFaultIds.has(id));
+
+  if (staleIds.length === 0) return 0;
+
+  const { error: updateError } = await supabase
+    .from('outages')
+    .update({ status: 'resolved', updated_at: new Date().toISOString() })
+    .eq('dno', 'NGED')
+    .in('dno_fault_id', staleIds);
+
+  if (updateError) throw new Error(`Resolve update error: ${updateError.message}`);
+  return staleIds.length;
+}
+
 /**
  * Insert outage record into database
  */
@@ -265,37 +290,24 @@ async function main() {
       process.exit(0);
     }
 
-    // Debug: show first record structure
-    if (records.length > 0) {
-      console.log('📋 First record structure:');
-      console.log(JSON.stringify(records[0], null, 2));
-      console.log('\n');
-    }
-
     console.log(`📋 Processing ${records.length} records...\n`);
 
     let successCount = 0;
     let errorCount = 0;
     const sampleOutages = [];
+    const activeFaultIds = new Set();
 
     for (let idx = 0; idx < records.length; idx++) {
       const record = records[idx];
       try {
-        // Normalize the record
         const normalized = normalizeNGEDRecord(record);
 
-        // Skip if no valid reference
-        if (!normalized.dno_fault_id) {
-          console.log(`   ⚠️  Record ${idx + 1}: Skipped - no fault_id`);
-          continue;
-        }
+        if (!normalized.dno_fault_id) continue;
 
-        // Insert into database
-        const result = await insertOutage(normalized);
-
+        activeFaultIds.add(normalized.dno_fault_id);
+        await insertOutage(normalized);
         successCount++;
 
-        // Keep first 3 for display
         if (sampleOutages.length < 3) {
           sampleOutages.push({
             dno_fault_id: normalized.dno_fault_id,
@@ -311,11 +323,15 @@ async function main() {
       }
     }
 
+    const resolvedCount = await resolveStaleOutages(activeFaultIds);
+    console.log(`🔄 Marked ${resolvedCount} stale outages as resolved\n`);
+
     // Summary
     console.log('='.repeat(60));
     console.log('\n📊 INGESTION SUMMARY\n');
-    console.log(`✅ Successfully inserted: ${successCount} outages`);
-    console.log(`❌ Failed: ${errorCount} outages`);
+    console.log(`✅ Successfully upserted: ${successCount} outages`);
+    console.log(`🔄 Resolved (stale):     ${resolvedCount}`);
+    console.log(`❌ Failed:               ${errorCount}`);
     console.log(`⏱️  Duration: ${Date.now() - startTime}ms\n`);
 
     if (sampleOutages.length > 0) {
@@ -353,4 +369,5 @@ module.exports = {
   fetchNGEDData,
   normalizeNGEDRecord,
   insertOutage,
+  resolveStaleOutages,
 };

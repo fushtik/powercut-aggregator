@@ -105,6 +105,31 @@ function normalizeENWLRecord(item) {
   };
 }
 
+async function resolveStaleOutages(activeFaultIds) {
+  const { data: dbActive, error } = await supabase
+    .from('outages')
+    .select('dno_fault_id')
+    .eq('dno', 'ENWL')
+    .eq('status', 'active');
+
+  if (error) throw new Error(`DB query error: ${error.message}`);
+
+  const staleIds = (dbActive || [])
+    .map(r => r.dno_fault_id)
+    .filter(id => !activeFaultIds.has(id));
+
+  if (staleIds.length === 0) return 0;
+
+  const { error: updateError } = await supabase
+    .from('outages')
+    .update({ status: 'resolved', updated_at: new Date().toISOString() })
+    .eq('dno', 'ENWL')
+    .in('dno_fault_id', staleIds);
+
+  if (updateError) throw new Error(`Resolve update error: ${updateError.message}`);
+  return staleIds.length;
+}
+
 async function insertOutage(outageData) {
   const { data, error } = await supabase
     .from('outages')
@@ -138,11 +163,13 @@ async function main() {
     let successCount = 0;
     let errorCount = 0;
     const sampleOutages = [];
+    const activeFaultIds = new Set();
 
     for (const item of items) {
       try {
         if (!item.faultNumber) continue;
         const normalized = normalizeENWLRecord(item);
+        activeFaultIds.add(normalized.dno_fault_id);
         await insertOutage(normalized);
         successCount++;
         if (sampleOutages.length < 3) sampleOutages.push(normalized);
@@ -152,10 +179,14 @@ async function main() {
       }
     }
 
+    const resolvedCount = await resolveStaleOutages(activeFaultIds);
+    console.log(`🔄 Marked ${resolvedCount} stale outages as resolved\n`);
+
     console.log('='.repeat(60));
     console.log('\n📊 INGESTION SUMMARY\n');
-    console.log(`✅ Successfully inserted: ${successCount} outages`);
-    console.log(`❌ Failed: ${errorCount} outages`);
+    console.log(`✅ Successfully upserted: ${successCount} outages`);
+    console.log(`🔄 Resolved (stale):     ${resolvedCount}`);
+    console.log(`❌ Failed:               ${errorCount}`);
     console.log(`⏱️  Duration: ${Date.now() - startTime}ms\n`);
 
     if (sampleOutages.length > 0) {
@@ -184,4 +215,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { fetchENWLData, normalizeENWLRecord, insertOutage };
+module.exports = { fetchENWLData, normalizeENWLRecord, insertOutage, resolveStaleOutages };
