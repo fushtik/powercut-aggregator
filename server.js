@@ -123,14 +123,17 @@ const PAGE_HTML = `<!DOCTYPE html>
 
     .leaflet-popup-content-wrapper { background: #16213e; color: #eee; border: 1px solid #0f3460; border-radius: 8px; }
     .leaflet-popup-tip { background: #16213e; }
-    .leaflet-popup-content { margin: 12px 16px; font-size: 0.82rem; line-height: 1.6; }
-    .popup-dno { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .leaflet-popup-content { margin: 12px 16px; font-size: 0.82rem; line-height: 1.6; min-width: 220px; }
+    .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .popup-dno { font-weight: 700; font-size: 0.95rem; }
+    .popup-divider { border: none; border-top: 1px solid #2a3a5c; margin: 6px 0; }
     .popup-row { display: flex; justify-content: space-between; gap: 16px; }
-    .popup-label { color: #888; }
+    .popup-label { color: #888; flex-shrink: 0; }
+    .popup-ref { font-size: 0.68rem; color: #666; margin-top: 6px; }
     .popup-badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; }
     .badge-unplanned { background: #c62828; color: #fff; }
     .badge-planned { background: #e65100; color: #fff; }
-    .popup-approx { font-size: 0.68rem; color: #888; margin-top: 6px; font-style: italic; }
+    .popup-approx { font-size: 0.68rem; color: #888; margin-top: 4px; font-style: italic; }
   </style>
 </head>
 <body>
@@ -227,6 +230,16 @@ function formatTime(iso) {
   return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+function timeSince(iso) {
+  if (!iso) return '';
+  const mins = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return \`\${mins}m ago\`;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem > 0 ? \`\${hrs}h \${rem}m ago\` : \`\${hrs}h ago\`;
+}
+
 const map = L.map('map', { zoomControl: true }).setView([54.5, -3.5], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -279,16 +292,27 @@ const doRender = (outages) => {
       const etr = outage.estimated_restoration_time ? formatTime(outage.estimated_restoration_time) : 'Unknown';
       const customers = outage.customers_affected > 0 ? outage.customers_affected.toLocaleString() : '<10';
 
+      const started = outage.start_time ? formatTime(outage.start_time) : null;
+      const elapsed = outage.start_time ? timeSince(outage.start_time) : '';
+      const cause = (outage.cause || '').replace(/^(LV |HV |PSI )/i, '').trim();
+      const desc = (outage.fault_description || '').replace(/^(ENWL|NGED|Northern Powergrid|UKPN|SSEN|SPE|NIE):\s*/i, '').trim();
+      const showDesc = desc && desc.toLowerCase() !== cause.toLowerCase() && desc.length < 120;
+      const ref = outage.reference_number || '';
+
       marker.bindPopup(\`
-        <div class="popup-dno" style="color:\${color}">\${outage.dno}</div>
+        <div class="popup-header">
+          <span class="popup-dno" style="color:\${color}">\${outage.dno}</span>
+          <span class="popup-badge \${badgeClass}">\${outage.outage_type}</span>
+        </div>
+        <hr class="popup-divider">
         <div class="popup-row">
           <span class="popup-label">Location</span>
           <span>\${outage.location_description || outage.affected_postcode_area || '—'}</span>
         </div>
-        <div class="popup-row">
-          <span class="popup-label">Type</span>
-          <span class="popup-badge \${badgeClass}">\${outage.outage_type}</span>
-        </div>
+        \${started ? \`<div class="popup-row">
+          <span class="popup-label">Started</span>
+          <span>\${started}\${elapsed ? ' <span style="color:#888;font-size:0.75em">(\${elapsed})</span>' : ''}</span>
+        </div>\` : ''}
         <div class="popup-row">
           <span class="popup-label">Customers</span>
           <span>\${customers}</span>
@@ -297,6 +321,15 @@ const doRender = (outages) => {
           <span class="popup-label">ETR</span>
           <span>\${etr}</span>
         </div>
+        \${cause ? \`<div class="popup-row">
+          <span class="popup-label">Cause</span>
+          <span>\${cause}</span>
+        </div>\` : ''}
+        \${showDesc ? \`<div class="popup-row">
+          <span class="popup-label">Info</span>
+          <span style="color:#bbb">\${desc}</span>
+        </div>\` : ''}
+        \${ref ? \`<div class="popup-ref">Ref: \${ref}</div>\` : ''}
         \${coords.approximate ? '<div class="popup-approx">⚠ Position approximate (postcode area centroid)</div>' : ''}
       \`);
 
