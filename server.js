@@ -147,6 +147,82 @@ const PAGE_HTML = `<!DOCTYPE html>
     .badge-unplanned { background: #c62828; color: #fff; }
     .badge-planned { background: #e65100; color: #fff; }
     .popup-approx { font-size: 0.68rem; color: #888; margin-top: 4px; font-style: italic; }
+
+    /* Nav menu */
+    #nav-menu { display: flex; gap: 4px; }
+    .nav-btn {
+      padding: 5px 12px;
+      background: transparent;
+      color: #888;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .nav-btn:hover { background: #0f3460; color: #fff; }
+
+    /* Slide-in panel */
+    #panel-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+    }
+    #panel-overlay.open { display: block; }
+    #panel {
+      position: fixed;
+      top: 0; right: -480px;
+      width: 460px;
+      max-width: 100vw;
+      height: 100vh;
+      background: #16213e;
+      border-left: 2px solid #0f3460;
+      z-index: 2001;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.25s ease;
+      overflow: hidden;
+    }
+    #panel.open { right: 0; }
+    #panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #0f3460;
+      flex-shrink: 0;
+    }
+    #panel-title { font-size: 1rem; font-weight: 700; color: #e94560; }
+    #panel-close {
+      background: none; border: none; color: #888; font-size: 1.4rem;
+      cursor: pointer; line-height: 1; padding: 0 4px;
+    }
+    #panel-close:hover { color: #fff; }
+    #panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: #ccc;
+    }
+    #panel-body h3 { color: #e94560; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 8px; }
+    #panel-body h3:first-child { margin-top: 0; }
+    #panel-body p { margin-bottom: 10px; color: #bbb; }
+    #panel-body a { color: #6ab0f5; text-decoration: none; }
+    #panel-body a:hover { text-decoration: underline; }
+
+    /* Coverage table */
+    .dno-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 0.8rem; }
+    .dno-table th { text-align: left; color: #888; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #0f3460; font-size: 0.72rem; text-transform: uppercase; }
+    .dno-table td { padding: 8px 8px; border-bottom: 1px solid #1a2a4a; vertical-align: top; }
+    .dno-table tr:last-child td { border-bottom: none; }
+    .dno-name { font-weight: 700; }
+    .dno-link { font-size: 0.72rem; display: block; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -164,7 +240,21 @@ const PAGE_HTML = `<!DOCTYPE html>
     <div id="stats">
       <span id="total-chip" class="stat-chip">Loading...</span>
     </div>
+    <div id="nav-menu">
+      <button class="nav-btn" onclick="openPanel('coverage')">Coverage</button>
+      <button class="nav-btn" onclick="openPanel('how')">How it works</button>
+      <button class="nav-btn" onclick="openPanel('about')">About</button>
+    </div>
   </div>
+</div>
+
+<div id="panel-overlay" onclick="closePanel()"></div>
+<div id="panel">
+  <div id="panel-header">
+    <span id="panel-title"></span>
+    <button id="panel-close" onclick="closePanel()">&#x2715;</button>
+  </div>
+  <div id="panel-body"></div>
 </div>
 
 <div id="map"><div class="loading">Loading outages...</div></div>
@@ -396,6 +486,70 @@ function refreshOutages() {
 
 loadOutages();
 setInterval(refreshOutages, 5 * 60 * 1000);
+
+const PANEL_CONTENT = {
+  coverage: {
+    title: 'Coverage',
+    html: '<p>This site aggregates live outage data from all seven electricity Distribution Network Operators (DNOs) covering the UK and Northern Ireland.</p>' +
+      '<table class="dno-table"><thead><tr><th>DNO</th><th>Area covered</th></tr></thead><tbody>' +
+      '<tr><td><span class="dno-name" style="color:#1565C0">UKPN</span>' +
+        '<a class="dno-link" href="https://www.ukpowernetworks.co.uk/power-cuts/current" target="_blank" rel="noopener">UK Power Networks &#x2197;</a></td>' +
+        '<td>London, South East &amp; East of England</td></tr>' +
+      '<tr><td><span class="dno-name" style="color:#2E7D32">SSEN</span>' +
+        '<a class="dno-link" href="https://www.ssen.co.uk/power-cuts-and-outages/" target="_blank" rel="noopener">Scottish &amp; Southern Energy Networks &#x2197;</a></td>' +
+        '<td>South England &amp; North Scotland</td></tr>' +
+      '<tr><td><span class="dno-name" style="color:#E65100">Northern Powergrid</span>' +
+        '<a class="dno-link" href="https://www.northernpowergrid.com/power-cuts" target="_blank" rel="noopener">Northern Powergrid &#x2197;</a></td>' +
+        '<td>North East England &amp; Yorkshire</td></tr>' +
+      '<tr><td><span class="dno-name" style="color:#C62828">SPE</span>' +
+        '<a class="dno-link" href="https://powercuts.spenergynetworks.co.uk/list" target="_blank" rel="noopener">SP Energy Networks &#x2197;</a></td>' +
+        '<td>Central &amp; South Scotland, North West Wales</td></tr>' +
+      '<tr><td><span class="dno-name" style="color:#6A1B9A">NGED</span>' +
+        '<a class="dno-link" href="https://powercuts.nationalgrid.co.uk/" target="_blank" rel="noopener">National Grid Electricity Distribution &#x2197;</a></td>' +
+        '<td>Midlands, South West England &amp; South Wales</td></tr>' +
+      '<tr><td><span class="dno-name" style="color:#00838F">NIE</span>' +
+        '<a class="dno-link" href="https://powercheck.nienetworks.co.uk/" target="_blank" rel="noopener">NIE Networks &#x2197;</a></td>' +
+        '<td>Northern Ireland</td></tr>' +
+      '<tr><td><span class="dno-name" style="color:#F57F17">ENWL</span>' +
+        '<a class="dno-link" href="https://www.enwl.co.uk/power-cuts/" target="_blank" rel="noopener">Electricity North West &#x2197;</a></td>' +
+        '<td>North West England</td></tr>' +
+      '</tbody></table>' +
+      '<p style="margin-top:14px;font-size:0.78rem;color:#777">Data sourced from each DNO&rsquo;s public API or website. Always check your DNO&rsquo;s site for the most accurate information.</p>'
+  },
+  how: {
+    title: 'How it works',
+    html: '<h3>Data collection</h3>' +
+      '<p>Each DNO publishes outage data through a public API or website. Automated scrapers fetch this data every 20 minutes and store it in a central database.</p>' +
+      '<h3>Data freshness</h3>' +
+      '<p>The map refreshes every 5 minutes. Outages that disappear from a DNO&rsquo;s feed are automatically marked as resolved and removed after 24 hours.</p>' +
+      '<h3>Coordinates</h3>' +
+      '<p>Where a DNO provides precise coordinates, the marker is placed accurately. Where only a postcode is available, the marker is placed at the postcode area centroid and shown at reduced opacity &mdash; these positions are approximate.</p>' +
+      '<h3>Planned vs unplanned</h3>' +
+      '<p>Use the <strong>Unplanned / All</strong> toggle to switch between emergency faults only, or all outages including scheduled maintenance works.</p>' +
+      '<h3>Marker size</h3>' +
+      '<p>Marker size scales with the number of customers affected. Larger circles indicate more homes and businesses without power.</p>'
+  },
+  about: {
+    title: 'About',
+    html: '<p>Built by <strong>Mark Haworth</strong>.</p>' +
+      '<p>An unofficial personal project aggregating publicly available outage data from all UK electricity Distribution Network Operators into a single map view.</p>' +
+      '<p>Not affiliated with or endorsed by any DNO or industry body.</p>'
+  }
+};
+
+function openPanel(name) {
+  const content = PANEL_CONTENT[name];
+  if (!content) return;
+  document.getElementById('panel-title').textContent = content.title;
+  document.getElementById('panel-body').innerHTML = content.html;
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('panel-overlay').classList.remove('open');
+}
 </script>
 </body>
 </html>`;
