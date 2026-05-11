@@ -69,8 +69,7 @@ run_scraper "SSEN" "ssen-fetcher.js"
 run_scraper "Northern Powergrid" "northern-powergrid-puppeteer.js"
 
 # Group 4: ENWL (Electricity North West) — NW England
-# Uncomment when API key is approved:
-# run_scraper "ENWL" "enwl-fetcher.js"
+run_scraper "ENWL" "enwl-fetcher.js"
 
 # Group 5: SP Energy
 run_scraper "SP Energy Networks" "sp-energy-puppeteer.js"
