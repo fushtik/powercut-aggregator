@@ -126,13 +126,13 @@ const PAGE_HTML = `<!DOCTYPE html>
       border-top: 1px solid #0f3460;
       padding: 6px 16px;
       font-size: 0.68rem;
-      color: #666;
+      color: #999;
       text-align: center;
       flex-shrink: 0;
       line-height: 1.5;
     }
-    #footer a { color: #555; text-decoration: none; }
-    #footer a:hover { color: #888; }
+    #footer a { color: #888; text-decoration: none; }
+    #footer a:hover { color: #bbb; }
 
     .leaflet-popup-content-wrapper { background: #16213e; color: #eee; border: 1px solid #0f3460; border-radius: 8px; }
     .leaflet-popup-tip { background: #16213e; }
