@@ -72,6 +72,30 @@ const PAGE_HTML = `<!DOCTYPE html>
       font-size: 0.8rem;
       padding: 4px 12px;
     }
+    #filter-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+    .filter-btn {
+      padding: 5px 12px;
+      background: transparent;
+      color: #888;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+    }
+    .filter-btn.active {
+      background: #0f3460;
+      color: #fff;
+    }
 
     #map { flex: 1; }
 
@@ -116,8 +140,14 @@ const PAGE_HTML = `<!DOCTYPE html>
     <h1>UK Power Cut Aggregator</h1>
     <div class="subtitle">Live active outages from 7 DNOs</div>
   </div>
-  <div id="stats">
-    <span id="total-chip" class="stat-chip">Loading...</span>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div id="filter-toggle">
+      <button class="filter-btn active" id="btn-unplanned" onclick="setFilter('unplanned')">Unplanned</button>
+      <button class="filter-btn" id="btn-all" onclick="setFilter('all')">All</button>
+    </div>
+    <div id="stats">
+      <span id="total-chip" class="stat-chip">Loading...</span>
+    </div>
   </div>
 </div>
 
@@ -206,16 +236,30 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const markersLayer = L.layerGroup().addTo(map);
 
+let currentFilter = 'unplanned';
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.getElementById('btn-unplanned').classList.toggle('active', filter === 'unplanned');
+  document.getElementById('btn-all').classList.toggle('active', filter === 'all');
+  loadOutages();
+}
+
+let cachedOutages = null;
+
 function loadOutages() {
-fetch('/api/outages')
-  .then(r => r.json())
-  .then(outages => {
+const doRender = (outages) => {
+    cachedOutages = outages;
+    const filtered = currentFilter === 'unplanned'
+      ? outages.filter(o => o.outage_type === 'unplanned')
+      : outages;
+
     markersLayer.clearLayers();
     const dnoCounts = {};
     let totalCustomers = 0;
     let plotted = 0;
 
-    outages.forEach(outage => {
+    filtered.forEach(outage => {
       const coords = resolveCoords(outage);
       if (!coords) return;
 
@@ -270,15 +314,28 @@ fetch('/api/outages')
       html += \`<span class="stat-chip" style="background:\${col}">\${dno}: \${count}</span>\`;
     });
     statsEl.innerHTML = html;
-  })
-  .catch(err => {
-    document.querySelector('.loading') && (document.querySelector('.loading').textContent = 'Failed to load outages');
-    console.error(err);
-  });
+};
+
+if (cachedOutages) {
+    doRender(cachedOutages);
+  } else {
+    fetch('/api/outages')
+      .then(r => r.json())
+      .then(doRender)
+      .catch(err => {
+        document.querySelector('.loading') && (document.querySelector('.loading').textContent = 'Failed to load outages');
+        console.error(err);
+      });
+  }
+}
+
+function refreshOutages() {
+  cachedOutages = null;
+  loadOutages();
 }
 
 loadOutages();
-setInterval(loadOutages, 5 * 60 * 1000);
+setInterval(refreshOutages, 5 * 60 * 1000);
 </script>
 </body>
 </html>`;
