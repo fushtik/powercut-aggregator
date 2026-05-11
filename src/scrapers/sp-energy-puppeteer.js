@@ -272,7 +272,7 @@ function normalizeSPEnergyRecord(record) {
     actual_restoration_time: actualRestoration,
     expected_duration_minutes: null,
     cause: isPlanned ? 'Planned maintenance' : 'Unplanned outage',
-    fault_description: record.fullText ? record.fullText.substring(0, 500) : null,
+    fault_description: null,  // fullText is noisy (loading artefacts, duplicates ETR/location)
     reference_number: (faultId || '').substring(0, 100),
     source_url: 'https://powercuts.spenergynetworks.co.uk/list',
     status: (record.status || '').toLowerCase().includes('restored') ? 'resolved' : 'active',

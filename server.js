@@ -296,7 +296,12 @@ const doRender = (outages) => {
       const elapsed = outage.start_time ? timeSince(outage.start_time) : '';
       const elapsedHtml = elapsed ? \` <span style="color:#888;font-size:0.75em">(\${elapsed})</span>\` : '';
       const cause = (outage.cause || '').replace(/^(LV |HV |PSI )/i, '').trim();
-      const desc = (outage.fault_description || '').replace(/^(ENWL|NGED|Northern Powergrid|UKPN|SSEN|SPE|NIE):\s*/i, '').trim();
+      const desc = (outage.fault_description || '')
+        .replace(/^(ENWL|NGED|Northern Powergrid|UKPN|SSEN|SPE|NIE):\s*/i, '')
+        .replace(/Loading outages\.*/gi, '')
+        .replace(/Estimated time to restore:[^\n]*/gi, '')
+        .replace(/Restored:[^\n]*/gi, '')
+        .trim();
       const showDesc = desc && desc.toLowerCase() !== cause.toLowerCase() && desc.length < 120;
       const ref = outage.reference_number || '';
 
