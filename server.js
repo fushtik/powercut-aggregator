@@ -162,20 +162,19 @@ const PAGE_HTML = `<!DOCTYPE html>
 
     /* Cluster bubbles */
     .cluster-bubble {
-      background: rgba(22,33,62,0.95);
-      border: 2px solid #0f3460;
+      border: 3px solid rgba(255,255,255,0.55);
       border-radius: 50%;
-      color: #eee;
+      color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       line-height: 1.1;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.45);
     }
     .cluster-count { font-weight: 700; font-size: 0.82rem; }
-    .cluster-customers { font-size: 0.62rem; color: #aad4ff; opacity: 0.9; }
+    .cluster-customers { font-size: 0.62rem; color: rgba(255,255,255,0.8); }
 
     /* Postcode search */
     #postcode-search { display: flex; align-items: center; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; }
@@ -311,28 +310,19 @@ const PAGE_HTML = `<!DOCTYPE html>
 </div>
 
 <div id="legend">
-  <h4>Clusters</h4>
-  <div class="legend-row">
-    <div class="cluster-bubble" style="width:38px;height:38px;flex-shrink:0">
-      <span class="cluster-count">3</span>
-      <span class="cluster-customers">450</span>
-    </div>
-    <span class="legend-label" style="font-size:0.7rem">outages<br>customers affected</span>
-  </div>
-  <hr class="legend-divider">
-  <h4>Single outage — border = DNO</h4>
-  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #1565C0"></span><span class="legend-label">UKPN</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #2E7D32"></span><span class="legend-label">SSEN</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #E65100"></span><span class="legend-label">Northern Powergrid</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #C62828"></span><span class="legend-label">SP Energy</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #6A1B9A"></span><span class="legend-label">NGED</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #00838F"></span><span class="legend-label">NIE</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #F57F17"></span><span class="legend-label">ENWL</span></div>
+  <h4>Clusters &amp; outages — colour = DNO</h4>
+  <div class="legend-row"><span class="legend-dot" style="background:#1565C0;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">UKPN</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#2E7D32;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SSEN</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#E65100;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">Northern Powergrid</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#C62828;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SP Energy</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#6A1B9A;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NGED</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#00838F;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NIE</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#F57F17;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">ENWL</span></div>
   <hr class="legend-divider">
   <div class="legend-size-row">
-    <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid #aaa;background:#1e3f6e"></span> &lt;10
-    <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid #aaa;background:#1e3f6e"></span> ~50
-    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid #aaa;background:#1e3f6e"></span> 100+ customers
+    <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> &lt;10
+    <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> ~50
+    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> 100+ customers
   </div>
 </div>
 
@@ -386,9 +376,9 @@ function resolveCoords(outage) {
 function singleMarkerIcon(customers, dnoColor) {
   const r = !customers || customers === 0 ? 5 : Math.max(5, Math.min(18, Math.sqrt(customers) * 1.2));
   const size = r * 2;
-  const border = dnoColor || '#4a90d9';
+  const fill = dnoColor || '#4a90d9';
   return L.divIcon({
-    html: \`<div style="width:\${size}px;height:\${size}px;background:#1e3f6e;border:2.5px solid \${border};border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.5)"></div>\`,
+    html: \`<div style="width:\${size}px;height:\${size}px;background:\${fill};border:2.5px solid rgba(255,255,255,0.55);border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.45)"></div>\`,
     className: '',
     iconSize: [size, size],
     iconAnchor: [r, r],
@@ -431,7 +421,7 @@ function makeDnoClusterGroup(dnoColor) {
         ? \`<span class="cluster-customers">\${totalCustomers >= 1000 ? (totalCustomers / 1000).toFixed(1) + 'k' : totalCustomers}</span>\`
         : '';
       return L.divIcon({
-        html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px;border-color:\${dnoColor}"><span class="cluster-count">\${count}</span>\${customersLine}</div>\`,
+        html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px;background:\${dnoColor}"><span class="cluster-count">\${count}</span>\${customersLine}</div>\`,
         className: '',
         iconSize: [size, size],
         iconAnchor: [size / 2, size / 2],
