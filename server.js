@@ -322,9 +322,9 @@ const PAGE_HTML = `<!DOCTYPE html>
   <hr class="legend-divider">
   <h4>Single outage</h4>
   <div class="legend-size-row">
-    <span class="legend-circle" style="width:8px;height:8px"></span> &lt;10
-    <span class="legend-circle" style="width:12px;height:12px"></span> ~50
-    <span class="legend-circle" style="width:18px;height:18px"></span> 100+
+    <span class="legend-circle" style="width:10px;height:10px;border:2px solid #0f3460;background:rgba(22,33,62,0.85)"></span> &lt;10
+    <span class="legend-circle" style="width:14px;height:14px;border:2px solid #0f3460;background:rgba(22,33,62,0.85)"></span> ~50
+    <span class="legend-circle" style="width:20px;height:20px;border:2px solid #0f3460;background:rgba(22,33,62,0.85)"></span> 100+
   </div>
 </div>
 
@@ -375,9 +375,15 @@ function resolveCoords(outage) {
   return null;
 }
 
-function markerRadius(customers) {
-  if (!customers || customers === 0) return 5;
-  return Math.max(5, Math.min(30, Math.sqrt(customers) * 1.2));
+function singleMarkerIcon(customers) {
+  const r = !customers || customers === 0 ? 5 : Math.max(5, Math.min(18, Math.sqrt(customers) * 1.2));
+  const size = r * 2;
+  return L.divIcon({
+    html: \`<div style="width:\${size}px;height:\${size}px;background:rgba(22,33,62,0.85);border:2px solid #0f3460;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>\`,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [r, r],
+  });
 }
 
 function formatTime(iso) {
@@ -452,17 +458,10 @@ const doRender = (outages) => {
       const coords = resolveCoords(outage);
       if (!coords) return;
 
-      const color = DNO_COLORS[outage.dno] || '#666';
-      const radius = markerRadius(outage.customers_affected);
       const badgeClass = outage.outage_type === 'planned' ? 'badge-planned' : 'badge-unplanned';
 
-      const marker = L.circleMarker([coords.lat, coords.lon], {
-        radius,
-        fillColor: color,
-        color: '#fff',
-        weight: 1.5,
-        opacity: 0.9,
-        fillOpacity: coords.approximate ? 0.55 : 0.80,
+      const marker = L.marker([coords.lat, coords.lon], {
+        icon: singleMarkerIcon(outage.customers_affected),
         customers: outage.customers_affected || 0,
       }).addTo(markersLayer);
 
