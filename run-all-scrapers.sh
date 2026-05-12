@@ -80,6 +80,13 @@ run_scraper "NGED" "nged-fetcher.js"
 # Group 7: NIE Networks (Northern Ireland)
 run_scraper "NIE Networks" "nie-fetcher.js"
 
+# Cleanup: delete resolved outages older than 24h
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Running: Cleanup (resolved > 24h)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+node "$SCRIPT_DIR/scripts/cleanup-resolved.js"
+
 # Summary
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

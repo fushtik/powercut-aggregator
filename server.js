@@ -48,6 +48,8 @@ const PAGE_HTML = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UK Power Cut Aggregator</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
@@ -157,6 +159,21 @@ const PAGE_HTML = `<!DOCTYPE html>
     .badge-unplanned { background: #c62828; color: #fff; }
     .badge-planned { background: #e65100; color: #fff; }
     .popup-approx { font-size: 0.68rem; color: #888; margin-top: 4px; font-style: italic; }
+
+    /* Cluster bubbles */
+    .cluster-bubble {
+      background: rgba(22,33,62,0.95);
+      border: 2px solid #0f3460;
+      border-radius: 50%;
+      color: #eee;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
 
     /* Postcode search */
     #postcode-search { display: flex; align-items: center; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; }
@@ -310,6 +327,7 @@ const PAGE_HTML = `<!DOCTYPE html>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 const DNO_COLORS = ${JSON.stringify(DNO_COLORS)};
 
@@ -382,7 +400,24 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
 }).addTo(map);
 
-const markersLayer = L.layerGroup().addTo(map);
+const markersLayer = L.markerClusterGroup({
+  maxClusterRadius: 50,
+  showCoverageOnHover: false,
+  spiderfyOnMaxZoom: true,
+  iconCreateFunction: function(cluster) {
+    const markers = cluster.getAllChildMarkers();
+    const totalCustomers = markers.reduce((sum, m) => sum + (m.options.customers || 0), 0);
+    const count = cluster.getChildCount();
+    const label = totalCustomers > 0 ? totalCustomers.toLocaleString() : count;
+    const size = count < 5 ? 34 : count < 20 ? 42 : 52;
+    return L.divIcon({
+      html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px">\${label}</div>\`,
+      className: '',
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    });
+  },
+}).addTo(map);
 
 let currentFilter = 'unplanned';
 
@@ -424,6 +459,7 @@ const doRender = (outages) => {
         weight: 1.5,
         opacity: 0.9,
         fillOpacity: coords.approximate ? 0.55 : 0.80,
+        customers: outage.customers_affected || 0,
       }).addTo(markersLayer);
 
       const etr = outage.estimated_restoration_time ? formatTime(outage.estimated_restoration_time) : 'Unknown';
