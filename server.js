@@ -180,7 +180,7 @@ const PAGE_HTML = `<!DOCTYPE html>
     /* Postcode search */
     #postcode-search { display: flex; align-items: center; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; }
     #postcode-input { padding: 5px 10px; background: transparent; color: #eee; border: none; font-size: 0.75rem; width: 130px; outline: none; }
-    #postcode-input::placeholder { color: #555; }
+    #postcode-input::placeholder { color: #aaa; }
     #postcode-btn { padding: 5px 10px; background: #0f3460; color: #eee; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 600; transition: background 0.15s; }
     #postcode-btn:hover { background: #1565C0; }
     #postcode-btn:disabled { opacity: 0.5; cursor: default; }
