@@ -47,6 +47,15 @@ const PAGE_HTML = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UK Power Cut Aggregator</title>
+  <meta name="description" content="Live UK power cut map aggregating outages from all 7 Distribution Network Operators. Updated every 15 minutes.">
+  <link rel="canonical" href="https://powercut-uk.ghz599.net">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://powercut-uk.ghz599.net">
+  <meta property="og:title" content="UK Power Cut Aggregator">
+  <meta property="og:description" content="Live UK power cut map aggregating outages from all 7 Distribution Network Operators. Updated every 15 minutes.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="UK Power Cut Aggregator">
+  <meta name="twitter:description" content="Live UK power cut map aggregating outages from all 7 Distribution Network Operators. Updated every 15 minutes.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
