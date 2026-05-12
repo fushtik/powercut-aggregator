@@ -315,9 +315,9 @@ const PAGE_HTML = `<!DOCTYPE html>
   <div class="legend-row">
     <div class="cluster-bubble" style="width:38px;height:38px;flex-shrink:0">
       <span class="cluster-count">3</span>
-      <span class="cluster-customers">450 cust</span>
+      <span class="cluster-customers">450</span>
     </div>
-    <span class="legend-label" style="font-size:0.7rem">outages / customers</span>
+    <span class="legend-label" style="font-size:0.7rem">outages<br>customers affected</span>
   </div>
   <hr class="legend-divider">
   <h4>Single outage</h4>
@@ -412,7 +412,7 @@ const markersLayer = L.markerClusterGroup({
     const count = cluster.getChildCount();
     const size = count < 5 ? 38 : count < 20 ? 46 : 56;
     const customersLine = totalCustomers > 0
-      ? \`<span class="cluster-customers">\${totalCustomers.toLocaleString()} cust</span>\`
+      ? \`<span class="cluster-customers">\${totalCustomers >= 1000 ? (totalCustomers / 1000).toFixed(1) + 'k' : totalCustomers}</span>\`
       : '';
     return L.divIcon({
       html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px"><span class="cluster-count">\${count}</span>\${customersLine}</div>\`,
