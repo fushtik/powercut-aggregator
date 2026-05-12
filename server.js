@@ -275,6 +275,8 @@ const PAGE_HTML = `<!DOCTYPE html>
   This is an unofficial personal project, not affiliated with or endorsed by any DNO or industry body.
   &nbsp;&middot;&nbsp;
   Data is aggregated from public sources for convenience only &mdash; always check your DNO&rsquo;s website for the latest information.
+  &nbsp;&middot;&nbsp;
+  <a href="/status">Scraper status</a>
 </div>
 
 <div id="legend">
