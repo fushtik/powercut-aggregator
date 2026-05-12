@@ -417,26 +417,34 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18,
 }).addTo(map);
 
-const markersLayer = L.markerClusterGroup({
-  maxClusterRadius: 50,
-  showCoverageOnHover: false,
-  spiderfyOnMaxZoom: true,
-  iconCreateFunction: function(cluster) {
-    const markers = cluster.getAllChildMarkers();
-    const totalCustomers = markers.reduce((sum, m) => sum + (m.options.customers || 0), 0);
-    const count = cluster.getChildCount();
-    const size = count < 5 ? 38 : count < 20 ? 46 : 56;
-    const customersLine = totalCustomers > 0
-      ? \`<span class="cluster-customers">\${totalCustomers >= 1000 ? (totalCustomers / 1000).toFixed(1) + 'k' : totalCustomers}</span>\`
-      : '';
-    return L.divIcon({
-      html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px"><span class="cluster-count">\${count}</span>\${customersLine}</div>\`,
-      className: '',
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-    });
-  },
-}).addTo(map);
+function makeDnoClusterGroup(dnoColor) {
+  return L.markerClusterGroup({
+    maxClusterRadius: 50,
+    showCoverageOnHover: false,
+    spiderfyOnMaxZoom: true,
+    iconCreateFunction: function(cluster) {
+      const markers = cluster.getAllChildMarkers();
+      const totalCustomers = markers.reduce((sum, m) => sum + (m.options.customers || 0), 0);
+      const count = cluster.getChildCount();
+      const size = count < 5 ? 38 : count < 20 ? 46 : 56;
+      const customersLine = totalCustomers > 0
+        ? \`<span class="cluster-customers">\${totalCustomers >= 1000 ? (totalCustomers / 1000).toFixed(1) + 'k' : totalCustomers}</span>\`
+        : '';
+      return L.divIcon({
+        html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px;border-color:\${dnoColor}"><span class="cluster-count">\${count}</span>\${customersLine}</div>\`,
+        className: '',
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      });
+    },
+  }).addTo(map);
+}
+
+const dnoLayers = {};
+Object.entries(DNO_COLORS).forEach(([dno, color]) => {
+  dnoLayers[dno] = makeDnoClusterGroup(color);
+});
+const fallbackLayer = makeDnoClusterGroup('#4a90d9');
 
 let currentFilter = 'unplanned';
 
@@ -458,7 +466,8 @@ const doRender = (outages) => {
       ? outages.filter(o => o.outage_type === 'unplanned')
       : outages;
 
-    markersLayer.clearLayers();
+    Object.values(dnoLayers).forEach(l => l.clearLayers());
+    fallbackLayer.clearLayers();
     const dnoCounts = {};
     let totalCustomers = 0;
     let plotted = 0;
@@ -473,7 +482,7 @@ const doRender = (outages) => {
       const marker = L.marker([coords.lat, coords.lon], {
         icon: singleMarkerIcon(outage.customers_affected, color),
         customers: outage.customers_affected || 0,
-      }).addTo(markersLayer);
+      }).addTo(dnoLayers[outage.dno] || fallbackLayer);
 
       const etr = outage.estimated_restoration_time ? formatTime(outage.estimated_restoration_time) : 'Unknown';
       const customers = outage.customers_affected > 0 ? outage.customers_affected.toLocaleString() : '<10';
