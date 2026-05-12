@@ -617,11 +617,32 @@ async function searchPostcode() {
       }
     }
 
-    map.setView([lat, lon], zoom);
+    // Find outages within 30km
+    const RADIUS_KM = 30;
+    const searchLL = L.latLng(lat, lon);
+    const visible = cachedOutages
+      ? (currentFilter === 'unplanned' ? cachedOutages.filter(o => o.outage_type === 'unplanned') : cachedOutages)
+      : [];
+    const nearby = visible
+      .map(o => { const c = resolveCoords(o); return c ? { distKm: searchLL.distanceTo(L.latLng(c.lat, c.lon)) / 1000, c } : null; })
+      .filter(x => x && x.distKm <= RADIUS_KM)
+      .sort((a, b) => a.distKm - b.distKm);
+
+    const nearbyMsg = nearby.length > 0
+      ? \`\${nearby.length} outage\${nearby.length !== 1 ? 's' : ''} within 30km\`
+      : 'No outages within 30km';
+
+    if (nearby.length > 0) {
+      const points = [searchLL, ...nearby.map(x => L.latLng(x.c.lat, x.c.lon))];
+      map.fitBounds(L.latLngBounds(points), { padding: [60, 60], maxZoom: 13 });
+    } else {
+      map.setView([lat, lon], zoom);
+    }
+
     searchMarker = L.circleMarker([lat, lon], {
       radius: 8, fillColor: '#e94560', color: '#fff', weight: 2, opacity: 1, fillOpacity: 1,
     }).addTo(map).bindPopup(
-      \`<strong>\${label}</strong><br><span style="color:#888;font-size:0.78rem">Searched location</span>\`
+      \`<strong>\${label}</strong><br><span style="color:#888;font-size:0.78rem">\${nearbyMsg}</span>\`
     ).openPopup();
 
     map.once('click', () => { if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; } });
