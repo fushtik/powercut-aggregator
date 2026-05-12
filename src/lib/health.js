@@ -17,19 +17,22 @@ function getSupabase() {
 
 function sendNtfy(title, message, priority, tags) {
   return new Promise((resolve) => {
-    const body = JSON.stringify({ topic: NTFY_TOPIC, title, message, priority, tags });
+    const msgBuf = Buffer.from(message, 'utf8');
     const req = https.request({
       hostname: 'ntfy.sh',
       port: 443,
-      path: '/',
+      path: `/${NTFY_TOPIC}`,
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Length': msgBuf.length,
+        'Title': title,
+        'Priority': priority,
+        'Tags': Array.isArray(tags) ? tags.join(',') : tags,
       },
     }, (res) => resolve(res.statusCode));
     req.on('error', () => resolve(null)); // never let ntfy failure crash the scraper
-    req.write(body);
+    req.write(msgBuf);
     req.end();
   });
 }

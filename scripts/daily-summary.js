@@ -52,30 +52,32 @@ async function main() {
   console.log(title);
   console.log(message);
 
-  const body = JSON.stringify({
-    topic: NTFY_TOPIC,
-    title,
-    message,
-    priority: allOk ? 'default' : 'high',
-    tags: allOk ? ['white_check_mark'] : ['warning'],
-  });
+  const msgBuf = Buffer.from(message, 'utf8');
 
   await new Promise((resolve) => {
     const req = https.request({
       hostname: 'ntfy.sh',
       port: 443,
-      path: '/',
+      path: `/${NTFY_TOPIC}`,
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Length': msgBuf.length,
+        'Title': title,
+        'Priority': allOk ? 'default' : 'high',
+        'Tags': allOk ? 'white_check_mark' : 'warning',
       },
     }, (res) => {
-      console.log(`ntfy response: ${res.statusCode}`);
-      resolve();
+      let resBody = '';
+      res.on('data', chunk => { resBody += chunk; });
+      res.on('end', () => {
+        console.log(`ntfy response: ${res.statusCode}`);
+        if (res.statusCode !== 200) console.error(`ntfy error body: ${resBody}`);
+        resolve();
+      });
     });
     req.on('error', (e) => { console.error(`ntfy error: ${e.message}`); resolve(); });
-    req.write(body);
+    req.write(msgBuf);
     req.end();
   });
 
