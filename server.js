@@ -262,6 +262,83 @@ const PAGE_HTML = `<!DOCTYPE html>
     #panel-body a { color: #6ab0f5; text-decoration: none; }
     #panel-body a:hover { text-decoration: underline; }
 
+    /* Hamburger */
+    #hamburger-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      color: #888;
+      font-size: 1.1rem;
+      padding: 4px 9px;
+      cursor: pointer;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    #hamburger-btn:hover { background: #0f3460; color: #fff; }
+    #hamburger-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      padding: 6px;
+      z-index: 3000;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    #hamburger-menu.open { display: flex; }
+    #hamburger-menu .nav-btn { text-align: left; width: 100%; }
+
+    /* Rotate prompt */
+    #rotate-prompt {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #1a1a2e;
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+      padding: 40px;
+    }
+    #rotate-prompt h2 { color: #e94560; font-size: 1.3rem; font-weight: 600; }
+    #rotate-prompt p { color: #888; font-size: 0.85rem; line-height: 1.6; max-width: 280px; }
+    #rotate-dismiss {
+      padding: 8px 22px;
+      background: transparent;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      color: #888;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    #rotate-dismiss:hover { background: #0f3460; color: #fff; }
+
+    /* Tablet (≤900px) */
+    @media (max-width: 900px) {
+      .subtitle { display: none; }
+      #header { padding: 10px 16px; }
+    }
+
+    /* Mobile (≤600px) */
+    @media (max-width: 600px) {
+      #header { padding: 8px 12px; }
+      #header h1 { font-size: 1rem; }
+      #nav-menu { display: none; }
+      #hamburger-btn { display: flex; align-items: center; }
+      #postcode-input { width: 90px; }
+      .stat-chip { font-size: 0.68rem; padding: 3px 7px; }
+      #total-chip { font-size: 0.72rem; }
+      #legend { font-size: 0.68rem; min-width: 140px; padding: 8px 10px; }
+    }
+
     /* Coverage table */
     .dno-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 0.8rem; }
     .dno-table th { text-align: left; color: #888; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #0f3460; font-size: 0.72rem; text-transform: uppercase; }
@@ -278,7 +355,7 @@ const PAGE_HTML = `<!DOCTYPE html>
     <h1>UK Power Cut Aggregator</h1>
     <div class="subtitle">Live active outages from 7 DNOs</div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:relative">
     <div id="filter-toggle">
       <button class="filter-btn active" id="btn-unplanned" onclick="setFilter('unplanned')">Unplanned</button>
       <button class="filter-btn" id="btn-all" onclick="setFilter('all')">All</button>
@@ -295,7 +372,20 @@ const PAGE_HTML = `<!DOCTYPE html>
       <button class="nav-btn" onclick="openPanel('how')">How it works</button>
       <button class="nav-btn" onclick="openPanel('about')">About</button>
     </div>
+    <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">&#9776;</button>
+    <div id="hamburger-menu">
+      <button class="nav-btn" onclick="openPanel('coverage');toggleHamburger()">Coverage</button>
+      <button class="nav-btn" onclick="openPanel('how');toggleHamburger()">How it works</button>
+      <button class="nav-btn" onclick="openPanel('about');toggleHamburger()">About</button>
+    </div>
   </div>
+</div>
+
+<div id="rotate-prompt">
+  <div style="font-size:3.5rem">&#x21BA;</div>
+  <h2>Rotate your device</h2>
+  <p>This map works best in landscape mode. Please rotate your device for the best experience.</p>
+  <button id="rotate-dismiss" onclick="dismissRotatePrompt()">Continue anyway</button>
 </div>
 
 <div id="panel-overlay" onclick="closePanel()"></div>
@@ -721,6 +811,34 @@ async function searchPostcode() {
     btn.disabled = false;
   }
 }
+
+// Hamburger menu
+function toggleHamburger() {
+  document.getElementById('hamburger-menu').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('hamburger-menu');
+  const btn = document.getElementById('hamburger-btn');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+});
+
+// Rotate prompt
+let rotateDismissed = false;
+function checkOrientation() {
+  if (rotateDismissed) return;
+  const prompt = document.getElementById('rotate-prompt');
+  const isMobileWidth = window.innerWidth <= 600;
+  const isPortrait = window.innerHeight > window.innerWidth;
+  prompt.style.display = (isMobileWidth && isPortrait) ? 'flex' : 'none';
+}
+function dismissRotatePrompt() {
+  rotateDismissed = true;
+  document.getElementById('rotate-prompt').style.display = 'none';
+}
+window.addEventListener('resize', checkOrientation);
+checkOrientation();
 </script>
 </body>
 </html>`;
