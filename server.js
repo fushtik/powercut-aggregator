@@ -322,9 +322,9 @@ const PAGE_HTML = `<!DOCTYPE html>
   <hr class="legend-divider">
   <h4>Single outage</h4>
   <div class="legend-size-row">
-    <span class="legend-circle" style="width:10px;height:10px;border:2px solid #0f3460;background:rgba(22,33,62,0.85)"></span> &lt;10
-    <span class="legend-circle" style="width:14px;height:14px;border:2px solid #0f3460;background:rgba(22,33,62,0.85)"></span> ~50
-    <span class="legend-circle" style="width:20px;height:20px;border:2px solid #0f3460;background:rgba(22,33,62,0.85)"></span> 100+
+    <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid #4a90d9;background:#1e3f6e"></span> &lt;10
+    <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid #4a90d9;background:#1e3f6e"></span> ~50
+    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid #4a90d9;background:#1e3f6e"></span> 100+
   </div>
 </div>
 
@@ -379,7 +379,7 @@ function singleMarkerIcon(customers) {
   const r = !customers || customers === 0 ? 5 : Math.max(5, Math.min(18, Math.sqrt(customers) * 1.2));
   const size = r * 2;
   return L.divIcon({
-    html: \`<div style="width:\${size}px;height:\${size}px;background:rgba(22,33,62,0.85);border:2px solid #0f3460;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>\`,
+    html: \`<div style="width:\${size}px;height:\${size}px;background:#1e3f6e;border:2px solid #4a90d9;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.5)"></div>\`,
     className: '',
     iconSize: [size, size],
     iconAnchor: [r, r],
