@@ -64,7 +64,7 @@ async function reportFailure(scraper, err, durationMs) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'scraper' });
   if (error) console.error(`[health] Failed to write failure for ${scraper}: ${error.message}`);
-  await sendNtfy(`❌ ${scraper} scraper failed`, message, 'high', ['warning', 'rotating_light']);
+  await sendNtfy(`${scraper} scraper failed`, message, 'high', ['warning', 'rotating_light']);
 }
 
 module.exports = { reportSuccess, reportFailure };

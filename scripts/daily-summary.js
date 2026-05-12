@@ -46,7 +46,7 @@ async function main() {
   });
 
   const allOk = SCRAPER_ORDER.every(name => healthMap[name]?.status === 'success');
-  const title = allOk ? '✅ All scrapers healthy' : '⚠️ Some scrapers need attention';
+  const title = allOk ? 'All scrapers healthy' : 'Some scrapers need attention';
   const message = lines.join('\n');
 
   console.log(title);
