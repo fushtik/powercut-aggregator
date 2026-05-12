@@ -399,7 +399,33 @@ const PAGE_HTML = `<!DOCTYPE html>
   <div id="panel-body"></div>
 </div>
 
-<div id="map"><div class="loading">Loading outages...</div></div>
+<div id="map">
+  <div class="loading">Loading outages...</div>
+  <div id="legend">
+    <h4>DNO</h4>
+    <div class="legend-row"><span class="legend-dot" style="background:#1565C0;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">UKPN <span id="legend-count-UKPN" class="legend-count"></span></span></div>
+    <div class="legend-row"><span class="legend-dot" style="background:#2E7D32;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SSEN <span id="legend-count-SSEN" class="legend-count"></span></span></div>
+    <div class="legend-row"><span class="legend-dot" style="background:#E65100;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">Northern Powergrid <span id="legend-count-Northern Powergrid" class="legend-count"></span></span></div>
+    <div class="legend-row"><span class="legend-dot" style="background:#C62828;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SP Energy <span id="legend-count-SPE" class="legend-count"></span></span></div>
+    <div class="legend-row"><span class="legend-dot" style="background:#6A1B9A;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NGED <span id="legend-count-NGED" class="legend-count"></span></span></div>
+    <div class="legend-row"><span class="legend-dot" style="background:#00838F;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NIE <span id="legend-count-NIE" class="legend-count"></span></span></div>
+    <div class="legend-row"><span class="legend-dot" style="background:#F57F17;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">ENWL <span id="legend-count-ENWL" class="legend-count"></span></span></div>
+    <hr class="legend-divider">
+    <div class="legend-row" style="align-items:center;gap:10px">
+      <div class="cluster-bubble" style="width:36px;height:36px;flex-shrink:0;background:#888">
+        <span class="cluster-count">5</span>
+        <span class="cluster-customers">142</span>
+      </div>
+      <span style="color:#aaa;font-size:0.68rem;line-height:1.4">outages<br>customers affected</span>
+    </div>
+    <hr class="legend-divider">
+    <div class="legend-size-row">
+      <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> &lt;10
+      <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> ~50
+      <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> 100+
+    </div>
+  </div>
+</div>
 
 <div id="footer">
   <span class="footer-legal">Outage data sourced from UK Distribution Network Operators and remains the property of the respective DNO.
@@ -409,31 +435,6 @@ const PAGE_HTML = `<!DOCTYPE html>
   Data is aggregated from public sources for convenience only &mdash; always check your DNO&rsquo;s website for the latest information.
   &nbsp;&middot;&nbsp;</span>
   <a href="/status">Scraper status</a>
-</div>
-
-<div id="legend">
-  <h4>DNO</h4>
-  <div class="legend-row"><span class="legend-dot" style="background:#1565C0;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">UKPN <span id="legend-count-UKPN" class="legend-count"></span></span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#2E7D32;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SSEN <span id="legend-count-SSEN" class="legend-count"></span></span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#E65100;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">Northern Powergrid <span id="legend-count-Northern Powergrid" class="legend-count"></span></span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#C62828;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SP Energy <span id="legend-count-SPE" class="legend-count"></span></span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#6A1B9A;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NGED <span id="legend-count-NGED" class="legend-count"></span></span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#00838F;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NIE <span id="legend-count-NIE" class="legend-count"></span></span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#F57F17;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">ENWL <span id="legend-count-ENWL" class="legend-count"></span></span></div>
-  <hr class="legend-divider">
-  <div class="legend-row" style="align-items:center;gap:10px">
-    <div class="cluster-bubble" style="width:36px;height:36px;flex-shrink:0;background:#888">
-      <span class="cluster-count">5</span>
-      <span class="cluster-customers">142</span>
-    </div>
-    <span style="color:#aaa;font-size:0.68rem;line-height:1.4">outages<br>customers affected</span>
-  </div>
-  <hr class="legend-divider">
-  <div class="legend-size-row">
-    <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> &lt;10
-    <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> ~50
-    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> 100+
-  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
