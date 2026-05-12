@@ -64,7 +64,7 @@ async function main() {
         'Content-Type': 'text/plain; charset=utf-8',
         'Content-Length': msgBuf.length,
         'Title': title,
-        'X-Priority': allOk ? 'default' : 'high',
+        'X-Priority': allOk ? 'high' : 'urgent',
         'X-Tags': allOk ? 'white_check_mark' : 'warning',
       },
     }, (res) => {
