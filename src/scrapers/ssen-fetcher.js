@@ -10,6 +10,7 @@ const https = require('https');
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
 require('dotenv').config();
+const { reportSuccess, reportFailure } = require('../lib/health');
 
 // Supabase client with WebSocket transport for Node.js 20
 const supabase = createClient(
@@ -265,6 +266,7 @@ async function main() {
     console.log('='.repeat(60));
     console.log('\n✨ SSEN data ingestion complete!\n');
 
+    await reportSuccess('SSEN', successCount, Date.now() - startTime);
     process.exit(0);
   } catch (err) {
     console.error('\n❌ FATAL ERROR\n');
@@ -273,6 +275,7 @@ async function main() {
     console.error('1. Check network connection');
     console.error('2. Verify SSEN API is accessible');
     console.error('3. Verify Supabase credentials in .env\n');
+    await reportFailure('SSEN', err, Date.now() - startTime);
     process.exit(1);
   }
 }

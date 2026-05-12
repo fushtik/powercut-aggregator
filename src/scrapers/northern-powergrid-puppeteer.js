@@ -10,6 +10,7 @@ const puppeteer = require('puppeteer');
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
 require('dotenv').config();
+const { reportSuccess, reportFailure } = require('../lib/health');
 
 // Supabase client with WebSocket transport for Node.js 20
 const supabase = createClient(
@@ -318,6 +319,7 @@ async function main() {
     if (outages.length === 0) {
       console.log('⚠️  No outages found in table.');
       console.log('   This may mean no active outages, or table structure changed.\n');
+      await reportSuccess('Northern Powergrid', 0, Date.now() - startTime);
       process.exit(0);
     }
 
@@ -378,6 +380,7 @@ async function main() {
     console.log('='.repeat(60));
     console.log('\n✨ Northern Powergrid data ingestion complete!\n');
 
+    await reportSuccess('Northern Powergrid', successCount, Date.now() - startTime);
     process.exit(0);
   } catch (err) {
     console.error('\n❌ FATAL ERROR\n');
@@ -387,6 +390,7 @@ async function main() {
     console.error('2. Verify page URL is correct');
     console.error('3. Increase timeout if page loads slowly');
     console.error('4. Check if Northern Powergrid website structure changed\n');
+    await reportFailure('Northern Powergrid', err, Date.now() - startTime);
     process.exit(1);
   }
 }

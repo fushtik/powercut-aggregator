@@ -12,6 +12,7 @@ const https = require('https');
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
 require('dotenv').config();
+const { reportSuccess, reportFailure } = require('../lib/health');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -157,6 +158,7 @@ async function main() {
 
     if (items.length === 0) {
       console.log('ℹ️  No active outages in NW England.\n');
+      await reportSuccess('ENWL', 0, Date.now() - startTime);
       process.exit(0);
     }
 
@@ -202,11 +204,13 @@ async function main() {
 
     console.log('='.repeat(60));
     console.log('\n✨ ENWL data ingestion complete!\n');
+    await reportSuccess('ENWL', successCount, Date.now() - startTime);
     process.exit(0);
 
   } catch (err) {
     console.error('\n❌ FATAL ERROR\n');
     console.error(`${err.message}\n`);
+    await reportFailure('ENWL', err, Date.now() - startTime);
     process.exit(1);
   }
 }

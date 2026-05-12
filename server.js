@@ -11,6 +11,16 @@ const supabase = createClient(
 
 const PORT = process.env.SERVER_PORT || 3000;
 
+const SCRAPER_ORDER = ['UKPN', 'SSEN', 'Northern Powergrid', 'SPE', 'NGED', 'NIE', 'ENWL'];
+
+async function getScraperHealth() {
+  const { data, error } = await supabase
+    .from('scraper_health')
+    .select('scraper,last_run,status,records_upserted,duration_ms,error_message');
+  if (error) throw error;
+  return data || [];
+}
+
 async function getOutages() {
   const { data, error } = await supabase
     .from('outages')
@@ -596,6 +606,85 @@ setInterval(() => {
 
 const server = http.createServer(async (req, res) => {
   const path = req.url.split('?')[0];
+
+  if (path === '/status') {
+    try {
+      const rows = await getScraperHealth();
+      const healthMap = Object.fromEntries(rows.map(r => [r.scraper, r]));
+      const now = Date.now();
+
+      function timeAgo(iso) {
+        const mins = Math.floor((now - new Date(iso)) / 60000);
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        const rem = mins % 60;
+        return rem > 0 ? `${hrs}h ${rem}m ago` : `${hrs}h ago`;
+      }
+
+      const rows_html = SCRAPER_ORDER.map(name => {
+        const h = healthMap[name];
+        if (!h) {
+          return `<tr><td style="color:#888">${name}</td><td colspan="4" style="color:#555">No data yet</td></tr>`;
+        }
+        const ok = h.status === 'success';
+        const statusCell = ok
+          ? '<td><span style="color:#2E7D32;font-weight:700">✅ OK</span></td>'
+          : '<td><span style="color:#c62828;font-weight:700">❌ Failed</span></td>';
+        const ago = timeAgo(h.last_run);
+        const lastRun = new Date(h.last_run).toLocaleString('en-GB', { day:'numeric',month:'short',hour:'2-digit',minute:'2-digit' });
+        const dur = `${(h.duration_ms / 1000).toFixed(1)}s`;
+        const errorCell = h.error_message
+          ? `<td style="color:#e57373;font-size:0.78rem">${h.error_message.substring(0, 80)}</td>`
+          : '<td style="color:#555">—</td>';
+        return `<tr>
+          <td style="font-weight:600">${name}</td>
+          ${statusCell}
+          <td>${lastRun} <span style="color:#666;font-size:0.8em">(${ago})</span></td>
+          <td>${h.records_upserted} / ${dur}</td>
+          ${errorCell}
+        </tr>`;
+      }).join('');
+
+      const allOk = SCRAPER_ORDER.every(n => healthMap[n]?.status === 'success');
+      const banner = allOk
+        ? '<div style="background:#1b3a1b;border:1px solid #2E7D32;border-radius:6px;padding:10px 16px;margin-bottom:20px;color:#81c784">✅ All scrapers running normally</div>'
+        : '<div style="background:#3a1b1b;border:1px solid #c62828;border-radius:6px;padding:10px 16px;margin-bottom:20px;color:#ef9a9a">⚠️ One or more scrapers need attention</div>';
+
+      const statusHtml = `<!DOCTYPE html><html lang="en"><head>
+        <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Scraper Status — UK Power Cut Aggregator</title>
+        <style>
+          * { margin:0;padding:0;box-sizing:border-box; }
+          body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a1a2e;color:#ddd;padding:32px 24px;font-size:0.88rem; }
+          h1 { color:#e94560;margin-bottom:4px;font-size:1.2rem; }
+          .sub { color:#666;margin-bottom:24px;font-size:0.8rem; }
+          table { width:100%;border-collapse:collapse;max-width:900px; }
+          th { text-align:left;color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;border-bottom:1px solid #0f3460; }
+          td { padding:10px 12px;border-bottom:1px solid #1a2a4a;vertical-align:top; }
+          tr:last-child td { border-bottom:none; }
+          a { color:#6ab0f5;text-decoration:none; } a:hover { text-decoration:underline; }
+        </style>
+      </head><body>
+        <h1>Scraper Status</h1>
+        <p class="sub">Updates every 20 minutes &nbsp;&middot;&nbsp; <a href="/">← Back to map</a></p>
+        ${banner}
+        <table>
+          <thead><tr><th>Scraper</th><th>Status</th><th>Last run</th><th>Records / Duration</th><th>Error</th></tr></thead>
+          <tbody>${rows_html}</tbody>
+        </table>
+      </body></html>`;
+
+      setSecurityHeaders(res);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store');
+      res.end(statusHtml);
+    } catch (err) {
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('Error loading status');
+    }
+    return;
+  }
 
   if (path === '/api/outages') {
     const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;

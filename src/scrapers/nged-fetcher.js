@@ -10,6 +10,7 @@ const https = require('https');
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
 require('dotenv').config();
+const { reportSuccess, reportFailure } = require('../lib/health');
 
 // Supabase client with WebSocket transport for Node.js 20
 const supabase = createClient(
@@ -287,6 +288,7 @@ async function main() {
     if (records.length === 0) {
       console.log('⚠️  No outages found.');
       console.log('   This may mean no active outages.\n');
+      await reportSuccess('NGED', 0, Date.now() - startTime);
       process.exit(0);
     }
 
@@ -348,6 +350,7 @@ async function main() {
     console.log('='.repeat(60));
     console.log('\n✨ NGED data ingestion complete!\n');
 
+    await reportSuccess('NGED', successCount, Date.now() - startTime);
     process.exit(0);
   } catch (err) {
     console.error('\n❌ FATAL ERROR\n');
@@ -356,6 +359,7 @@ async function main() {
     console.error('1. Check network connection');
     console.error('2. Verify NGED API is accessible');
     console.error('3. Verify Supabase credentials in .env\n');
+    await reportFailure('NGED', err, Date.now() - startTime);
     process.exit(1);
   }
 }

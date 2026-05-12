@@ -10,6 +10,7 @@ const https = require('https');
 const { createClient } = require('@supabase/supabase-js');
 const ws = require('ws');
 require('dotenv').config();
+const { reportSuccess, reportFailure } = require('../lib/health');
 
 // Supabase client with WebSocket transport for Node.js 20
 const supabase = createClient(
@@ -23,37 +24,49 @@ const UKPN_API_HOST = 'ukpowernetworks.opendatasoft.com';
 const UKPN_API_PATH = '/api/v2/catalog/datasets/ukpn-live-faults/records';
 
 /**
- * Fetch data from UKPN API
+ * Fetch one page from UKPN API
  */
-async function fetchUKPNData() {
+function fetchUKPNPage(offset) {
   return new Promise((resolve, reject) => {
-    const url = `https://${UKPN_API_HOST}${UKPN_API_PATH}?limit=100`;
-
-    console.log('📡 Fetching from UKPN API...');
-    console.log(`   URL: ${url}\n`);
-
+    const url = `https://${UKPN_API_HOST}${UKPN_API_PATH}?limit=100&offset=${offset}`;
     https.get(url, (res) => {
       let data = '';
-
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-
+      res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
         if (res.statusCode !== 200) {
           reject(new Error(`HTTP ${res.statusCode}: ${data}`));
           return;
         }
-
-        try {
-          const parsed = JSON.parse(data);
-          resolve(parsed);
-        } catch (err) {
-          reject(new Error(`JSON parse error: ${err.message}`));
-        }
+        try { resolve(JSON.parse(data)); }
+        catch (err) { reject(new Error(`JSON parse error: ${err.message}`)); }
       });
     }).on('error', reject);
   });
+}
+
+/**
+ * Fetch all UKPN records, paginating until complete
+ */
+async function fetchUKPNData() {
+  console.log('📡 Fetching from UKPN API...');
+  console.log(`   URL: https://${UKPN_API_HOST}${UKPN_API_PATH}?limit=100\n`);
+
+  const firstPage = await fetchUKPNPage(0);
+  const totalCount = firstPage.total_count || 0;
+  const allRecords = [...(firstPage.records || [])];
+
+  console.log(`   Total available: ${totalCount}`);
+
+  let offset = 100;
+  while (offset < totalCount) {
+    const page = await fetchUKPNPage(offset);
+    const batch = page.records || [];
+    if (batch.length === 0) break;
+    allRecords.push(...batch);
+    offset += batch.length;
+  }
+
+  return { total_count: totalCount, records: allRecords };
 }
 
 /**
@@ -247,13 +260,24 @@ async function main() {
     console.log(`📋 Processing ${records.length} records...\n`);
 
     let successCount = 0;
+    let skippedCount = 0;
     let errorCount = 0;
     const sampleOutages = [];
     const activeFaultIds = new Set();
+    const etrCutoff = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2h grace period
 
     for (const record of records) {
       try {
         const normalized = normalizeUKPNRecord(record);
+
+        // Skip records whose ETR has passed — UKPN leaves stale planned works
+        // in the API for weeks without removing them.
+        if (normalized.estimated_restoration_time &&
+            new Date(normalized.estimated_restoration_time) < etrCutoff) {
+          skippedCount++;
+          continue; // not added to activeFaultIds → reconciliation will resolve it
+        }
+
         activeFaultIds.add(normalized.dno_fault_id);
         await insertOutage(normalized);
         successCount++;
@@ -280,6 +304,7 @@ async function main() {
     console.log('=' .repeat(60));
     console.log('\n📊 INGESTION SUMMARY\n');
     console.log(`✅ Successfully upserted: ${successCount} outages`);
+    console.log(`⏭️  Skipped (ETR passed): ${skippedCount}`);
     console.log(`🔄 Resolved (stale):     ${resolvedCount}`);
     console.log(`❌ Failed:               ${errorCount}`);
     console.log(`⏱️  Duration: ${Date.now() - startTime}ms\n`);
@@ -299,6 +324,7 @@ async function main() {
     console.log('\n✨ Data ingestion complete!\n');
     console.log('Next: Run queries to verify data in database\n');
 
+    await reportSuccess('UKPN', successCount, Date.now() - startTime);
     process.exit(0);
   } catch (err) {
     console.error('\n❌ FATAL ERROR\n');
@@ -307,6 +333,7 @@ async function main() {
     console.error('1. Check network connection');
     console.error('2. Verify UKPN API is accessible');
     console.error('3. Verify Supabase credentials in .env\n');
+    await reportFailure('UKPN', err, Date.now() - startTime);
     process.exit(1);
   }
 }
