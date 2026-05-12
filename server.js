@@ -167,13 +167,15 @@ const PAGE_HTML = `<!DOCTYPE html>
       border-radius: 50%;
       color: #eee;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-weight: 700;
-      font-size: 0.78rem;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      line-height: 1.1;
       box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
+    .cluster-count { font-weight: 700; font-size: 0.82rem; }
+    .cluster-customers { font-size: 0.62rem; color: #aad4ff; opacity: 0.9; }
 
     /* Postcode search */
     #postcode-search { display: flex; align-items: center; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; }
@@ -309,16 +311,16 @@ const PAGE_HTML = `<!DOCTYPE html>
 </div>
 
 <div id="legend">
-  <h4>DNO</h4>
-  <div class="legend-row"><span class="legend-dot" style="background:#1565C0"></span><span class="legend-label">UKPN</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#2E7D32"></span><span class="legend-label">SSEN</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#E65100"></span><span class="legend-label">Northern Powergrid</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#C62828"></span><span class="legend-label">SP Energy</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#6A1B9A"></span><span class="legend-label">NGED</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#00838F"></span><span class="legend-label">NIE</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#F57F17"></span><span class="legend-label">ENWL</span></div>
+  <h4>Clusters</h4>
+  <div class="legend-row">
+    <div class="cluster-bubble" style="width:38px;height:38px;flex-shrink:0">
+      <span class="cluster-count">3</span>
+      <span class="cluster-customers">450 cust</span>
+    </div>
+    <span class="legend-label" style="font-size:0.7rem">outages / customers</span>
+  </div>
   <hr class="legend-divider">
-  <h4>Customers affected</h4>
+  <h4>Single outage</h4>
   <div class="legend-size-row">
     <span class="legend-circle" style="width:8px;height:8px"></span> &lt;10
     <span class="legend-circle" style="width:12px;height:12px"></span> ~50
@@ -408,10 +410,12 @@ const markersLayer = L.markerClusterGroup({
     const markers = cluster.getAllChildMarkers();
     const totalCustomers = markers.reduce((sum, m) => sum + (m.options.customers || 0), 0);
     const count = cluster.getChildCount();
-    const label = totalCustomers > 0 ? totalCustomers.toLocaleString() : count;
-    const size = count < 5 ? 34 : count < 20 ? 42 : 52;
+    const size = count < 5 ? 38 : count < 20 ? 46 : 56;
+    const customersLine = totalCustomers > 0
+      ? \`<span class="cluster-customers">\${totalCustomers.toLocaleString()} cust</span>\`
+      : '';
     return L.divIcon({
-      html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px">\${label}</div>\`,
+      html: \`<div class="cluster-bubble" style="width:\${size}px;height:\${size}px"><span class="cluster-count">\${count}</span>\${customersLine}</div>\`,
       className: '',
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],
