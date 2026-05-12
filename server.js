@@ -310,7 +310,7 @@ const PAGE_HTML = `<!DOCTYPE html>
 </div>
 
 <div id="legend">
-  <h4>Clusters &amp; outages — colour = DNO</h4>
+  <h4>DNO</h4>
   <div class="legend-row"><span class="legend-dot" style="background:#1565C0;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">UKPN</span></div>
   <div class="legend-row"><span class="legend-dot" style="background:#2E7D32;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SSEN</span></div>
   <div class="legend-row"><span class="legend-dot" style="background:#E65100;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">Northern Powergrid</span></div>
