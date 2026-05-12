@@ -61,7 +61,7 @@ const PAGE_HTML = `<!DOCTYPE html>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
 
     #header {
       background: #16213e;
@@ -224,7 +224,7 @@ const PAGE_HTML = `<!DOCTYPE html>
       top: 0; right: -480px;
       width: 460px;
       max-width: 100vw;
-      height: 100vh;
+      height: 100vh; height: 100dvh;
       background: #16213e;
       border-left: 2px solid #0f3460;
       z-index: 2001;
@@ -325,6 +325,7 @@ const PAGE_HTML = `<!DOCTYPE html>
     @media (max-width: 900px) {
       .subtitle { display: none; }
       #header { padding: 10px 16px; }
+      .footer-legal { display: none; }
     }
 
     /* Mobile (≤600px) */
@@ -337,6 +338,7 @@ const PAGE_HTML = `<!DOCTYPE html>
       .stat-chip { font-size: 0.68rem; padding: 3px 7px; }
       #total-chip { font-size: 0.72rem; }
       #legend { font-size: 0.68rem; min-width: 140px; padding: 8px 10px; }
+      #footer { display: none; }
     }
 
     /* Coverage table */
@@ -400,12 +402,12 @@ const PAGE_HTML = `<!DOCTYPE html>
 <div id="map"><div class="loading">Loading outages...</div></div>
 
 <div id="footer">
-  Outage data sourced from UK Distribution Network Operators and remains the property of the respective DNO.
+  <span class="footer-legal">Outage data sourced from UK Distribution Network Operators and remains the property of the respective DNO.
   &nbsp;&middot;&nbsp;
   This is an unofficial personal project, not affiliated with or endorsed by any DNO or industry body.
   &nbsp;&middot;&nbsp;
   Data is aggregated from public sources for convenience only &mdash; always check your DNO&rsquo;s website for the latest information.
-  &nbsp;&middot;&nbsp;
+  &nbsp;&middot;&nbsp;</span>
   <a href="/status">Scraper status</a>
 </div>
 
