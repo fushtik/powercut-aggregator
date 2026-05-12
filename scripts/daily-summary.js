@@ -64,8 +64,8 @@ async function main() {
         'Content-Type': 'text/plain; charset=utf-8',
         'Content-Length': msgBuf.length,
         'Title': title,
-        'Priority': allOk ? 'default' : 'high',
-        'Tags': allOk ? 'white_check_mark' : 'warning',
+        'X-Priority': allOk ? 'default' : 'high',
+        'X-Tags': allOk ? 'white_check_mark' : 'warning',
       },
     }, (res) => {
       let resBody = '';

@@ -27,8 +27,8 @@ function sendNtfy(title, message, priority, tags) {
         'Content-Type': 'text/plain; charset=utf-8',
         'Content-Length': msgBuf.length,
         'Title': title,
-        'Priority': priority,
-        'Tags': Array.isArray(tags) ? tags.join(',') : tags,
+        'X-Priority': priority,
+        'X-Tags': Array.isArray(tags) ? tags.join(',') : tags,
       },
     }, (res) => resolve(res.statusCode));
     req.on('error', () => resolve(null)); // never let ntfy failure crash the scraper
