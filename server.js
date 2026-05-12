@@ -127,6 +127,7 @@ const PAGE_HTML = `<!DOCTYPE html>
     .legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
     .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
     .legend-label { color: #ddd; }
+    .legend-count { color: #aaa; font-weight: 400; font-size: 0.7rem; }
     .legend-divider { border: none; border-top: 1px solid #333; margin: 8px 0; }
     .legend-size-row { display: flex; align-items: center; gap: 6px; color: #aaa; font-size: 0.7rem; }
     .legend-circle { border-radius: 50%; background: #666; display: inline-block; }
@@ -311,13 +312,13 @@ const PAGE_HTML = `<!DOCTYPE html>
 
 <div id="legend">
   <h4>DNO</h4>
-  <div class="legend-row"><span class="legend-dot" style="background:#1565C0;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">UKPN</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#2E7D32;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SSEN</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#E65100;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">Northern Powergrid</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#C62828;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SP Energy</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#6A1B9A;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NGED</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#00838F;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NIE</span></div>
-  <div class="legend-row"><span class="legend-dot" style="background:#F57F17;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">ENWL</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#1565C0;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">UKPN <span id="legend-count-UKPN" class="legend-count"></span></span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#2E7D32;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SSEN <span id="legend-count-SSEN" class="legend-count"></span></span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#E65100;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">Northern Powergrid <span id="legend-count-Northern Powergrid" class="legend-count"></span></span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#C62828;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">SP Energy <span id="legend-count-SPE" class="legend-count"></span></span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#6A1B9A;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NGED <span id="legend-count-NGED" class="legend-count"></span></span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#00838F;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NIE <span id="legend-count-NIE" class="legend-count"></span></span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#F57F17;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">ENWL <span id="legend-count-ENWL" class="legend-count"></span></span></div>
   <hr class="legend-divider">
   <div class="legend-row" style="align-items:center;gap:10px">
     <div class="cluster-bubble" style="width:36px;height:36px;flex-shrink:0;background:#888">
@@ -539,14 +540,14 @@ const doRender = (outages) => {
 
     // Update header stats
     const statsEl = document.getElementById('stats');
-    const colors = ${JSON.stringify(DNO_COLORS)};
     const custDisplay = totalCustomers >= 1000 ? (totalCustomers / 1000).toFixed(1) + 'k' : totalCustomers;
-    let html = \`<span id="total-chip" class="stat-chip">\${plotted} active outages</span><span class="stat-chip" style="background:#444">~\${custDisplay} customers affected</span>\`;
-    Object.entries(dnoCounts).sort((a,b) => b[1]-a[1]).forEach(([dno, count]) => {
-      const col = colors[dno] || '#666';
-      html += \`<span class="stat-chip" style="background:\${col}">\${dno}: \${count}</span>\`;
+    statsEl.innerHTML = \`<span id="total-chip" class="stat-chip">\${plotted} active outages</span><span class="stat-chip" style="background:#444">~\${custDisplay} customers affected</span>\`;
+
+    // Update legend counts
+    ['UKPN','SSEN','Northern Powergrid','SPE','NGED','NIE','ENWL'].forEach(dno => {
+      const el = document.getElementById(\`legend-count-\${dno}\`);
+      if (el) el.textContent = dnoCounts[dno] ? \`(\${dnoCounts[dno]})\` : '';
     });
-    statsEl.innerHTML = html;
 };
 
 if (cachedOutages) {
