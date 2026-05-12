@@ -319,10 +319,18 @@ const PAGE_HTML = `<!DOCTYPE html>
   <div class="legend-row"><span class="legend-dot" style="background:#00838F;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">NIE</span></div>
   <div class="legend-row"><span class="legend-dot" style="background:#F57F17;border:2px solid rgba(255,255,255,0.5)"></span><span class="legend-label">ENWL</span></div>
   <hr class="legend-divider">
+  <div class="legend-row" style="align-items:center;gap:10px">
+    <div class="cluster-bubble" style="width:36px;height:36px;flex-shrink:0;background:#888">
+      <span class="cluster-count">5</span>
+      <span class="cluster-customers">142</span>
+    </div>
+    <span style="color:#aaa;font-size:0.68rem;line-height:1.4">outages<br>customers affected</span>
+  </div>
+  <hr class="legend-divider">
   <div class="legend-size-row">
     <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> &lt;10
     <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> ~50
-    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> 100+ customers
+    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid rgba(255,255,255,0.5);background:#555"></span> 100+
   </div>
 </div>
 
