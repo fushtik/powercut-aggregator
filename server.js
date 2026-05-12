@@ -298,28 +298,29 @@ const PAGE_HTML = `<!DOCTYPE html>
     #rotate-prompt {
       display: none;
       position: fixed;
-      inset: 0;
-      background: #1a1a2e;
+      top: 0; left: 0; right: 0;
+      background: #0f3460;
+      border-bottom: 1px solid #1565C0;
       z-index: 9999;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 20px;
-      text-align: center;
-      padding: 40px;
-    }
-    #rotate-prompt h2 { color: #e94560; font-size: 1.3rem; font-weight: 600; }
-    #rotate-prompt p { color: #888; font-size: 0.85rem; line-height: 1.6; max-width: 280px; }
-    #rotate-dismiss {
-      padding: 8px 22px;
-      background: transparent;
-      border: 1px solid #0f3460;
-      border-radius: 8px;
-      color: #888;
+      gap: 10px;
+      padding: 8px 16px;
       font-size: 0.8rem;
-      cursor: pointer;
+      color: #ccc;
     }
-    #rotate-dismiss:hover { background: #0f3460; color: #fff; }
+    #rotate-dismiss {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      margin-left: 6px;
+    }
+    #rotate-dismiss:hover { color: #fff; }
 
     /* Tablet (≤900px) */
     @media (max-width: 900px) {
@@ -384,10 +385,8 @@ const PAGE_HTML = `<!DOCTYPE html>
 </div>
 
 <div id="rotate-prompt">
-  <div style="font-size:3.5rem">&#x21BA;</div>
-  <h2>Rotate your device</h2>
-  <p>This map works best in landscape mode. Please rotate your device for the best experience.</p>
-  <button id="rotate-dismiss" onclick="dismissRotatePrompt()">Continue anyway</button>
+  <span>&#x21BA; Rotate your device for a better experience</span>
+  <button id="rotate-dismiss" onclick="dismissRotatePrompt()" aria-label="Dismiss">&#x2715;</button>
 </div>
 
 <div id="panel-overlay" onclick="closePanel()"></div>
@@ -829,15 +828,24 @@ document.addEventListener('click', function(e) {
 
 // Rotate prompt
 let rotateDismissed = false;
+let rotateTimer = null;
 function checkOrientation() {
   if (rotateDismissed) return;
   const prompt = document.getElementById('rotate-prompt');
   const isMobileWidth = window.innerWidth <= 600;
   const isPortrait = window.innerHeight > window.innerWidth;
-  prompt.style.display = (isMobileWidth && isPortrait) ? 'flex' : 'none';
+  if (isMobileWidth && isPortrait) {
+    prompt.style.display = 'flex';
+    if (!rotateTimer) rotateTimer = setTimeout(dismissRotatePrompt, 6000);
+  } else {
+    prompt.style.display = 'none';
+    clearTimeout(rotateTimer);
+    rotateTimer = null;
+  }
 }
 function dismissRotatePrompt() {
   rotateDismissed = true;
+  clearTimeout(rotateTimer);
   document.getElementById('rotate-prompt').style.display = 'none';
 }
 window.addEventListener('resize', checkOrientation);
