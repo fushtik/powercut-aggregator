@@ -540,7 +540,8 @@ const doRender = (outages) => {
     // Update header stats
     const statsEl = document.getElementById('stats');
     const colors = ${JSON.stringify(DNO_COLORS)};
-    let html = \`<span id="total-chip" class="stat-chip">\${plotted} active outages</span>\`;
+    const custDisplay = totalCustomers >= 1000 ? (totalCustomers / 1000).toFixed(1) + 'k' : totalCustomers;
+    let html = \`<span id="total-chip" class="stat-chip">\${plotted} active outages</span><span class="stat-chip">~\${custDisplay} customers affected</span>\`;
     Object.entries(dnoCounts).sort((a,b) => b[1]-a[1]).forEach(([dno, count]) => {
       const col = colors[dno] || '#666';
       html += \`<span class="stat-chip" style="background:\${col}">\${dno}: \${count}</span>\`;
