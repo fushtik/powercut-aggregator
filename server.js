@@ -386,6 +386,8 @@ let cachedOutages = null;
 function loadOutages() {
 const doRender = (outages) => {
     cachedOutages = outages;
+    const loadingEl = document.querySelector('.loading');
+    if (loadingEl) loadingEl.remove();
     const filtered = currentFilter === 'unplanned'
       ? outages.filter(o => o.outage_type === 'unplanned')
       : outages;
