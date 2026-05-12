@@ -458,6 +458,7 @@ const doRender = (outages) => {
       const coords = resolveCoords(outage);
       if (!coords) return;
 
+      const color = DNO_COLORS[outage.dno] || '#666';
       const badgeClass = outage.outage_type === 'planned' ? 'badge-planned' : 'badge-unplanned';
 
       const marker = L.marker([coords.lat, coords.lon], {
