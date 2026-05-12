@@ -158,6 +158,14 @@ const PAGE_HTML = `<!DOCTYPE html>
     .badge-planned { background: #e65100; color: #fff; }
     .popup-approx { font-size: 0.68rem; color: #888; margin-top: 4px; font-style: italic; }
 
+    /* Postcode search */
+    #postcode-search { display: flex; align-items: center; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; }
+    #postcode-input { padding: 5px 10px; background: transparent; color: #eee; border: none; font-size: 0.75rem; width: 130px; outline: none; }
+    #postcode-input::placeholder { color: #555; }
+    #postcode-btn { padding: 5px 10px; background: #0f3460; color: #eee; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 600; transition: background 0.15s; }
+    #postcode-btn:hover { background: #1565C0; }
+    #postcode-btn:disabled { opacity: 0.5; cursor: default; }
+
     /* Nav menu */
     #nav-menu { display: flex; gap: 4px; }
     .nav-btn {
@@ -249,6 +257,10 @@ const PAGE_HTML = `<!DOCTYPE html>
     </div>
     <div id="stats">
       <span id="total-chip" class="stat-chip">Loading...</span>
+    </div>
+    <div id="postcode-search">
+      <input id="postcode-input" type="text" placeholder="Search postcode..." maxlength="8" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')searchPostcode()">
+      <button id="postcode-btn" onclick="searchPostcode()">Go</button>
     </div>
     <div id="nav-menu">
       <button class="nav-btn" onclick="openPanel('coverage')">Coverage</button>
@@ -566,6 +578,61 @@ function closePanel() {
   document.getElementById('panel').classList.remove('open');
   document.getElementById('panel-overlay').classList.remove('open');
 }
+
+let searchMarker = null;
+
+async function searchPostcode() {
+  const input = document.getElementById('postcode-input');
+  const btn = document.getElementById('postcode-btn');
+  const raw = input.value.trim().replace(/\\s+/g, '').toUpperCase();
+  if (!raw) return;
+
+  btn.textContent = '…';
+  btn.disabled = true;
+  if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
+
+  try {
+    let lat, lon, label, zoom;
+
+    const res = await fetch(\`https://api.postcodes.io/postcodes/\${encodeURIComponent(raw)}\`);
+    if (res.ok) {
+      const data = await res.json();
+      lat = data.result.latitude;
+      lon = data.result.longitude;
+      label = data.result.postcode;
+      zoom = 14;
+    } else {
+      const outRes = await fetch(\`https://api.postcodes.io/outcodes/\${encodeURIComponent(raw)}\`);
+      if (outRes.ok) {
+        const data = await outRes.json();
+        lat = data.result.latitude;
+        lon = data.result.longitude;
+        label = raw;
+        zoom = 11;
+      } else {
+        input.value = '';
+        input.placeholder = 'Not found';
+        setTimeout(() => { input.placeholder = 'Search postcode...'; }, 2000);
+        return;
+      }
+    }
+
+    map.setView([lat, lon], zoom);
+    searchMarker = L.circleMarker([lat, lon], {
+      radius: 8, fillColor: '#e94560', color: '#fff', weight: 2, opacity: 1, fillOpacity: 1,
+    }).addTo(map).bindPopup(
+      \`<strong>\${label}</strong><br><span style="color:#888;font-size:0.78rem">Searched location</span>\`
+    ).openPopup();
+
+    map.once('click', () => { if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; } });
+
+  } catch (err) {
+    console.error('Postcode search failed:', err);
+  } finally {
+    btn.textContent = 'Go';
+    btn.disabled = false;
+  }
+}
 </script>
 </body>
 </html>`;
@@ -580,7 +647,7 @@ function setSecurityHeaders(res) {
     "script-src 'self' 'unsafe-inline' https://unpkg.com; " +
     "style-src 'self' 'unsafe-inline' https://unpkg.com; " +
     "img-src 'self' data: https://*.tile.openstreetmap.org; " +
-    "connect-src 'self'; " +
+    "connect-src 'self' https://api.postcodes.io; " +
     "frame-ancestors 'none';"
   );
 }
