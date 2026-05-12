@@ -320,11 +320,19 @@ const PAGE_HTML = `<!DOCTYPE html>
     <span class="legend-label" style="font-size:0.7rem">outages<br>customers affected</span>
   </div>
   <hr class="legend-divider">
-  <h4>Single outage</h4>
+  <h4>Single outage — border = DNO</h4>
+  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #1565C0"></span><span class="legend-label">UKPN</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #2E7D32"></span><span class="legend-label">SSEN</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #E65100"></span><span class="legend-label">Northern Powergrid</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #C62828"></span><span class="legend-label">SP Energy</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #6A1B9A"></span><span class="legend-label">NGED</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #00838F"></span><span class="legend-label">NIE</span></div>
+  <div class="legend-row"><span class="legend-dot" style="background:#1e3f6e;border:2.5px solid #F57F17"></span><span class="legend-label">ENWL</span></div>
+  <hr class="legend-divider">
   <div class="legend-size-row">
-    <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid #4a90d9;background:#1e3f6e"></span> &lt;10
-    <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid #4a90d9;background:#1e3f6e"></span> ~50
-    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid #4a90d9;background:#1e3f6e"></span> 100+
+    <span class="legend-circle" style="width:10px;height:10px;flex-shrink:0;border:2px solid #aaa;background:#1e3f6e"></span> &lt;10
+    <span class="legend-circle" style="width:14px;height:14px;flex-shrink:0;border:2px solid #aaa;background:#1e3f6e"></span> ~50
+    <span class="legend-circle" style="width:20px;height:20px;flex-shrink:0;border:2px solid #aaa;background:#1e3f6e"></span> 100+ customers
   </div>
 </div>
 
@@ -375,11 +383,12 @@ function resolveCoords(outage) {
   return null;
 }
 
-function singleMarkerIcon(customers) {
+function singleMarkerIcon(customers, dnoColor) {
   const r = !customers || customers === 0 ? 5 : Math.max(5, Math.min(18, Math.sqrt(customers) * 1.2));
   const size = r * 2;
+  const border = dnoColor || '#4a90d9';
   return L.divIcon({
-    html: \`<div style="width:\${size}px;height:\${size}px;background:#1e3f6e;border:2px solid #4a90d9;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.5)"></div>\`,
+    html: \`<div style="width:\${size}px;height:\${size}px;background:#1e3f6e;border:2.5px solid \${border};border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.5)"></div>\`,
     className: '',
     iconSize: [size, size],
     iconAnchor: [r, r],
@@ -462,7 +471,7 @@ const doRender = (outages) => {
       const badgeClass = outage.outage_type === 'planned' ? 'badge-planned' : 'badge-unplanned';
 
       const marker = L.marker([coords.lat, coords.lon], {
-        icon: singleMarkerIcon(outage.customers_affected),
+        icon: singleMarkerIcon(outage.customers_affected, color),
         customers: outage.customers_affected || 0,
       }).addTo(markersLayer);
 
