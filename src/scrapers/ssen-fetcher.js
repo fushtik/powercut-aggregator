@@ -3,7 +3,7 @@
 /**
  * SSEN (Scottish & Southern Electricity Networks) Data Fetcher
  * Pulls real-time outage data from SSEN's public API
- * https://external.distribution.prd.ssen.co.uk/opendataportal-prd/v4/api/getallfaults
+ * https://ssen-powertrack-api.opcld.com/gridiview/reporter/info
  */
 
 const https = require('https');
@@ -20,7 +20,7 @@ const supabase = createClient(
 );
 
 // SSEN API configuration
-const SSEN_API_URL = 'https://external.distribution.prd.ssen.co.uk/opendataportal-prd/v4/api/getallfaults';
+const SSEN_API_URL = 'https://ssen-powertrack-api.opcld.com/gridiview/reporter/info';
 
 /**
  * Fetch data from SSEN API
@@ -61,8 +61,6 @@ function normalizeSSENRecord(fault) {
     'PSI': 'planned',
   };
 
-  const isRestored = fault.jobStatus === 'R';
-
   const postcodeArea = fault.affectedAreas && fault.affectedAreas.length > 0
     ? fault.affectedAreas[0].trim().split(' ')[0].substring(0, 4)
     : null;
@@ -74,21 +72,21 @@ function normalizeSSENRecord(fault) {
     severity: null,
     affected_postcode_area: postcodeArea,
     affected_postcodes: fault.affectedAreas || [],
-    customers_affected: fault.customerCount || 0,
-    location_description: (fault.title || 'Unknown location').substring(0, 500),
-    lat: fault.location?.latitude || null,
-    lon: fault.location?.longitude || null,
-    start_time: fault.loggedAtUtc ? new Date(fault.loggedAtUtc).toISOString() : new Date().toISOString(),
-    estimated_restoration_time: fault.estimatedRestorationTimeUtc
-      ? new Date(fault.estimatedRestorationTimeUtc).toISOString()
+    customers_affected: fault.affectedCustomerCount || 0,
+    location_description: (fault.name || 'Unknown location').substring(0, 500),
+    lat: fault.latitude || null,
+    lon: fault.longitude || null,
+    start_time: fault.loggedAt ? new Date(fault.loggedAt).toISOString() : new Date().toISOString(),
+    estimated_restoration_time: fault.estimatedRestoration
+      ? new Date(fault.estimatedRestoration).toISOString()
       : null,
     actual_restoration_time: null,
     expected_duration_minutes: null,
     cause: fault.type ? `${fault.type} Fault` : 'Unknown cause',
     fault_description: (fault.message || ''),
     reference_number: (fault.reference || null)?.substring(0, 100),
-    source_url: 'https://external.distribution.prd.ssen.co.uk/opendataportal-prd/v4/api/getallfaults',
-    status: isRestored ? 'resolved' : 'active',
+    source_url: 'https://ssen-powertrack-api.opcld.com/gridiview/reporter/info',
+    status: fault.resolved ? 'resolved' : 'active',
     raw_data: fault,
   };
 }
@@ -199,7 +197,7 @@ async function main() {
     const apiResponse = await fetchSSENData();
     console.log(`✅ Fetched data from SSEN API\n`);
 
-    const faults = apiResponse.faults || [];
+    const faults = apiResponse.Faults || [];
     console.log(`📋 Processing ${faults.length} faults...\n`);
 
     let successCount = 0;
