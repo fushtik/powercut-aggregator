@@ -497,7 +497,7 @@ function singleMarkerIcon(customers, dnoColor) {
 
 function formatTime(iso) {
   if (!iso) return 'Unknown';
-  return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
 }
 
 function timeSince(iso) {
@@ -919,7 +919,7 @@ const server = http.createServer(async (req, res) => {
           ? '<td><span style="color:#2E7D32;font-weight:700">✅ OK</span></td>'
           : '<td><span style="color:#c62828;font-weight:700">❌ Failed</span></td>';
         const ago = timeAgo(h.last_run);
-        const lastRun = new Date(h.last_run).toLocaleString('en-GB', { day:'numeric',month:'short',hour:'2-digit',minute:'2-digit' });
+        const lastRun = new Date(h.last_run).toLocaleString('en-GB', { day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London' });
         const dur = `${(h.duration_ms / 1000).toFixed(1)}s`;
         const errorCell = h.error_message
           ? `<td style="color:#e57373;font-size:0.78rem">${h.error_message.substring(0, 80)}</td>`
