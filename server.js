@@ -681,7 +681,7 @@ const PANEL_CONTENT = {
         '<a class="dno-link" href="https://www.ukpowernetworks.co.uk/power-cuts/current" target="_blank" rel="noopener">UK Power Networks &#x2197;</a></td>' +
         '<td>London, South East &amp; East of England</td></tr>' +
       '<tr><td><span class="dno-name" style="color:#2E7D32">SSEN</span>' +
-        '<a class="dno-link" href="https://www.ssen.co.uk/power-cuts-and-outages/" target="_blank" rel="noopener">Scottish &amp; Southern Energy Networks &#x2197;</a></td>' +
+        '<a class="dno-link" href="https://powertrack.ssen.co.uk/powertrack" target="_blank" rel="noopener">Scottish &amp; Southern Energy Networks &#x2197;</a></td>' +
         '<td>South England &amp; North Scotland</td></tr>' +
       '<tr><td><span class="dno-name" style="color:#E65100">Northern Powergrid</span>' +
         '<a class="dno-link" href="https://www.northernpowergrid.com/power-cuts" target="_blank" rel="noopener">Northern Powergrid &#x2197;</a></td>' +
