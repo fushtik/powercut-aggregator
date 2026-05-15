@@ -696,7 +696,7 @@ const PANEL_CONTENT = {
         '<a class="dno-link" href="https://powercheck.nienetworks.co.uk/" target="_blank" rel="noopener">NIE Networks &#x2197;</a></td>' +
         '<td>Northern Ireland</td></tr>' +
       '<tr><td><span class="dno-name" style="color:#F57F17">ENWL</span>' +
-        '<a class="dno-link" href="https://www.enwl.co.uk/power-cuts/" target="_blank" rel="noopener">Electricity North West &#x2197;</a></td>' +
+        '<a class="dno-link" href="https://www.enwl.co.uk/power-cuts/power-cuts-power-cuts-live-power-cut-information-fault-list/fault-list/" target="_blank" rel="noopener">Electricity North West &#x2197;</a></td>' +
         '<td>North West England</td></tr>' +
       '</tbody></table>' +
       '<p style="margin-top:14px;font-size:0.78rem;color:#777">Data sourced from each DNO&rsquo;s public API or website. Always check your DNO&rsquo;s site for the most accurate information.</p>'
