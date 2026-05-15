@@ -678,7 +678,7 @@ const PANEL_CONTENT = {
     html: '<p>This site aggregates live outage data from all seven electricity Distribution Network Operators (DNOs) covering the UK and Northern Ireland.</p>' +
       '<table class="dno-table"><thead><tr><th>DNO</th><th>Area covered</th></tr></thead><tbody>' +
       '<tr><td><span class="dno-name" style="color:#1565C0">UKPN</span>' +
-        '<a class="dno-link" href="https://www.ukpowernetworks.co.uk/power-cuts/current" target="_blank" rel="noopener">UK Power Networks &#x2197;</a></td>' +
+        '<a class="dno-link" href="https://www.ukpowernetworks.co.uk" target="_blank" rel="noopener">UK Power Networks &#x2197;</a></td>' +
         '<td>London, South East &amp; East of England</td></tr>' +
       '<tr><td><span class="dno-name" style="color:#2E7D32">SSEN</span>' +
         '<a class="dno-link" href="https://powertrack.ssen.co.uk/powertrack" target="_blank" rel="noopener">Scottish &amp; Southern Energy Networks &#x2197;</a></td>' +
