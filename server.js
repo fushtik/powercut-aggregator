@@ -630,7 +630,7 @@ const doRender = (outages) => {
           <span class="popup-label">Info</span>
           <span style="color:#bbb">\${desc}</span>
         </div>\` : ''}
-        \${ref ? \`<div class="popup-ref">Ref: \${ref}</div>\` : ''}
+        \${ref ? \`<div class="popup-ref">\${outage.dno === 'SSEN' ? \`Ref: <a href="https://powertrack.ssen.co.uk/powertrack#\${ref}" target="_blank" rel="noopener" style="color:#888">\${ref} &#x2197;</a>\` : \`Ref: \${ref}\`}</div>\` : ''}
         \${coords.approximate ? '<div class="popup-approx">⚠ Position approximate (postcode area centroid)</div>' : ''}
       \`);
 
